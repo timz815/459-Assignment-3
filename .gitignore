@@ -35,11 +35,3 @@ yarn-error.log*
 /.pnp
 .pnp.js
 .pnp.loader.mjs
-
-# CRA specific
-# These are safe to commit but you might want to ignore them
-# /public/favicon.ico
-# /src/logo.svg
-# /src/App.test.js
-# /src/setupTests.js
-# /src/reportWebVitals.js
