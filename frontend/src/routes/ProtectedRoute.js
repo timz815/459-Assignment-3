@@ -1,6 +1,6 @@
 import { useContext } from "react";
 import { Navigate } from "react-router-dom"; // Navigate is used for automatic redirects
-import { AuthContext } from "./context/AuthContext";
+import { AuthContext } from "../context/AuthContext";
 
 //  "wrapper component"
 // the 'children' prop represents whatever component is placed inside of it in App.js (e.g., <Dashboard />)
@@ -12,7 +12,7 @@ function ProtectedRoute({ children }) {
   if (!token) {
     // immediately bounce them back to the login page
     // <Navigate /> renders a redirect instantly without the user doing anything
-    return <Navigate to="/login" />;
+    return <Navigate to="/" />;
   }
 
   // access Granted

@@ -1,8 +1,8 @@
 import { useContext, useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import "./App.css";
-import { AuthContext } from "./context/AuthContext";
-import Header from "./Header";
+import { AuthContext } from "../context/AuthContext";
+import Header from "../components/Header";
 
 function Dashboard() {
   const [plants, setPlants] = useState([]);

@@ -1,7 +1,7 @@
 import { useContext, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { AuthContext } from "./context/AuthContext";
-import Header from "./Header";
+import { AuthContext } from "../context/AuthContext";
+import Header from "../components/Header";
 
 function AddPlant() {
   const { token } = useContext(AuthContext);

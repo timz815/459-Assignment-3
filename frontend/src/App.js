@@ -1,11 +1,11 @@
 import { Route, BrowserRouter as Router, Routes } from "react-router-dom";
 import { AuthProvider } from "./context/AuthContext";
-import Home from "./Home";
-import Login from "./Login";
-import Register from "./Register";
-import Dashboard from "./Dashboard";
-import AddPlant from "./AddPlant";
-import ProtectedRoute from "./ProtectedRoute";
+import Home from "./pages/Home";
+import Login from "./pages/Login";
+import Register from "./pages/Register";
+import Dashboard from "./pages/Dashboard";
+import AddPlant from "./pages/AddPlant";
+import ProtectedRoute from "./routes/ProtectedRoute";
 
 function App() {
   return (

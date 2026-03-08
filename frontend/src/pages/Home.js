@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import Navbar from "./Header";
+import Navbar from "../components/Header";
 
 function Home() {
   const [allPlants, setAllPlants] = useState([]);

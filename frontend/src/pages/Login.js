@@ -1,7 +1,7 @@
 import { useContext, useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { AuthContext } from "./context/AuthContext";
-import Navbar from "./Header";
+import { AuthContext } from "../context/AuthContext";
+import Navbar from "../components/Header";
 
 function Login() {
   const [formData, setFormData] = useState({ username: "", password: "" });
