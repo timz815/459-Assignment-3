@@ -1,30 +1,19 @@
 import { useContext, useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import "./App.css";
 import { AuthContext } from "./context/AuthContext";
+import Header from "./Header";
 
 function Dashboard() {
   const [plants, setPlants] = useState([]);
-  const { token, user, logout } = useContext(AuthContext);
+  const { token, user } = useContext(AuthContext);
+  const navigate = useNavigate();
 
-  // local state for the form, match models/Plant.js and database
-  const [formData, setFormData] = useState({
-    common_name: "",
-    family: "",
-    categories: "",
-    origin: "",
-    climate: "",
-    img_url: "",
-  });
-
-  // initial load
-  // fetches only the plants belonging to the logged-in user.
   useEffect(() => {
     if (!token) return;
 
     fetch("http://localhost:5000/api/plants/my-plants", {
-      headers: {
-        Authorization: token,
-      },
+      headers: { Authorization: token },
     })
       .then((res) => {
         if (!res.ok) throw new Error("Could not retrieve your garden data.");
@@ -34,78 +23,28 @@ function Dashboard() {
       .catch((err) => console.error("Fetch error:", err));
   }, [token]);
 
-  // handle input changes for the controlled form
-  function handleChange(e) {
-    setFormData({ ...formData, [e.target.name]: e.target.value });
-  }
-
-  // create
-  // adds a new plant
-  async function handleSubmit(e) {
-    e.preventDefault();
-    try {
-      const res = await fetch("http://localhost:5000/api/plants", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: token,
-        },
-        body: JSON.stringify(formData),
-      });
-
-      if (res.ok) {
-        const newPlant = await res.json();
-        // update local state instantly for a smooth UI experience
-        setPlants([...plants, newPlant]);
-        // reset the form
-        setFormData({
-          common_name: "",
-          family: "",
-          categories: "",
-          origin: "",
-          climate: "",
-          img_url: "",
-        });
-      } else {
-        const errorData = await res.json();
-        alert(errorData.message || "Failed to add plant");
-      }
-    } catch (err) {
-      console.error("Submission error:", err);
-    }
-  }
-
-  // delete
-  // removes a plant after ownership verification on the server.
   async function handleDelete(id) {
     try {
       const res = await fetch(`http://localhost:5000/api/plants/${id}`, {
         method: "DELETE",
-        headers: {
-          Authorization: token,
-        },
+        headers: { Authorization: token },
       });
 
       if (res.ok) {
         setPlants(plants.filter((p) => p._id !== id));
       } else {
-        alert(
-          "Delete failed. You might not have permission to remove this item.",
-        );
+        alert("Delete failed. You might not have permission to remove this item.");
       }
     } catch (err) {
       console.error("Delete error:", err);
     }
   }
 
-  // helper function to clean image URLs.
-  // extracts direct image links from Google Search redirects found in the CSV.
   function getCleanImageUrl(url) {
     if (!url) return null;
     if (url.includes("search?q=")) {
       try {
-        const directUrl = url.split("search?q=")[1];
-        return decodeURIComponent(directUrl);
+        return decodeURIComponent(url.split("search?q=")[1]);
       } catch (e) {
         return url;
       }
@@ -114,176 +53,177 @@ function Dashboard() {
   }
 
   return (
-    <div className="page-container">
-      <header className="main-header" style={styles.header}>
-        <div>
-          <h1>Plant Collection Dashboard</h1>
-          {user && (
-            <h3 style={styles.welcomeText}>Welcome back, {user.username}!</h3>
-          )}
-        </div>
-        <button
-          onClick={logout}
-          className="delete-btn"
-          style={styles.logoutBtn}
-        >
-          Logout
-        </button>
-      </header>
+    <div style={styles.page}>
+      <Header />
 
-      <div className="content-wrapper">
-        <div className="left-panel">
-          <div className="card">
-            <h3>Add New Plant</h3>
-            <form onSubmit={handleSubmit} className="plant-form">
-              <label>Common Name</label>
-              <input
-                name="common_name"
-                value={formData.common_name}
-                onChange={handleChange}
-                placeholder="e.g. Janet Craig"
-                required
-              />
-
-              <label>Family</label>
-              <input
-                name="family"
-                value={formData.family}
-                onChange={handleChange}
-                placeholder="e.g. Liliaceae"
-              />
-
-              <label>Category</label>
-              <input
-                name="categories"
-                value={formData.categories}
-                onChange={handleChange}
-                placeholder="e.g. Dracaena"
-              />
-
-              <label>Origin</label>
-              <input
-                name="origin"
-                value={formData.origin}
-                onChange={handleChange}
-                placeholder="e.g. Cultivar"
-              />
-
-              <label>Climate</label>
-              <input
-                name="climate"
-                value={formData.climate}
-                onChange={handleChange}
-                placeholder="e.g. Tropical"
-              />
-
-              <label>Image URL</label>
-              <input
-                name="img_url"
-                value={formData.img_url}
-                onChange={handleChange}
-                placeholder="http://..."
-              />
-
-              <button type="submit">Add to Garden</button>
-            </form>
+      <div style={styles.content}>
+        {/* Page title row */}
+        <div style={styles.titleRow}>
+          <div>
+            <h1 style={styles.pageTitle}>My Garden</h1>
+            {user && (
+              <p style={styles.welcomeText}>Welcome back, {user.username}!</p>
+            )}
           </div>
+          <button
+            style={styles.addBtn}
+            onClick={() => navigate("/add-plant")}
+          >
+            + Add New Plant
+          </button>
         </div>
 
-        <div className="right-panel">
-          <h2 style={styles.gardenTitle}>My Garden ({plants.length} Plants)</h2>
-
-          <div className="plant-grid">
-            {plants.map((plant) => (
-              <div key={plant._id} className="plant-card">
-                <div className="image-container">
+        {/* Plant grid */}
+        <div style={styles.plantGrid}>
+          {plants.length > 0 ? (
+            plants.map((plant) => (
+              <div key={plant._id} style={styles.plantCard}>
+                <div style={styles.cardImg}>
                   {plant.img_url ? (
                     <img
                       src={getCleanImageUrl(plant.img_url)}
                       alt={plant.common_name}
+                      style={styles.img}
                       onError={(e) => {
                         e.target.onerror = null;
-                        e.target.src =
-                          "https://via.placeholder.com/260x180?text=Image+Not+Found";
+                        e.target.src = "https://via.placeholder.com/260x180?text=Image+Not+Found";
                       }}
                     />
                   ) : (
-                    <div
-                      className="placeholder"
-                      style={styles.imagePlaceholder}
-                    >
-                      No Image Provided
-                    </div>
+                    <div style={styles.noImg}>No Image Provided</div>
                   )}
                 </div>
-                <div className="card-details">
-                  <h3>{plant.common_name || "Unnamed Plant"}</h3>
-                  <p>
-                    <strong>Family:</strong> {plant.family || "N/A"}
-                  </p>
-                  <p>
-                    <strong>Category:</strong> {plant.categories || "N/A"}
-                  </p>
-                  <p>
-                    <small>Origin: {plant.origin || "N/A"}</small>
-                  </p>
-                  <p>
-                    <small>Climate: {plant.climate || "N/A"}</small>
-                  </p>
+                <div style={styles.cardBody}>
+                  <h3 style={styles.cardName}>{plant.common_name || "Unnamed Plant"}</h3>
+                  <p style={styles.cardDetail}><strong>Family:</strong> {plant.family || "N/A"}</p>
+                  <p style={styles.cardDetail}><strong>Category:</strong> {plant.categories || "N/A"}</p>
+                  <p style={styles.cardSmall}>Origin: {plant.origin || "N/A"}</p>
+                  <p style={styles.cardSmall}>Climate: {plant.climate || "N/A"}</p>
                   <button
-                    className="delete-btn"
+                    style={styles.deleteBtn}
                     onClick={() => handleDelete(plant._id)}
                   >
                     Delete
                   </button>
                 </div>
               </div>
-            ))}
-
-            {plants.length === 0 && (
-              <div style={styles.emptyMessage}>
-                <p>
-                  Your garden is currently empty. Add your first plant using the
-                  form on the left!
-                </p>
-              </div>
-            )}
-          </div>
+            ))
+          ) : (
+            <div style={styles.emptyMessage}>
+              <p>Your garden is empty. Click <strong>"+ Add New Plant"</strong> to get started!</p>
+            </div>
+          )}
         </div>
       </div>
     </div>
   );
 }
 
+const GREEN = "#2e7d32";
+const BORDER = "#c8e6c9";
+
 const styles = {
-  header: {
+  page: {
+    minHeight: "100vh",
+    backgroundColor: "#fafafa",
+    fontFamily: "'Segoe UI', sans-serif",
+  },
+  content: {
+    maxWidth: "1200px",
+    margin: "0 auto",
+    padding: "40px 20px",
+  },
+  titleRow: {
     display: "flex",
     justifyContent: "space-between",
     alignItems: "center",
+    marginBottom: "32px",
+    borderBottom: `2px solid ${BORDER}`,
+    paddingBottom: "20px",
+  },
+  pageTitle: {
+    margin: "0 0 4px",
+    color: GREEN,
+    fontSize: "2rem",
   },
   welcomeText: {
-    color: "#2e7d32",
-    marginTop: "5px",
+    margin: 0,
+    color: "#666",
+    fontSize: "0.95rem",
   },
-  logoutBtn: {
-    width: "auto",
-    padding: "10px 25px",
-    background: "#c62828",
-    color: "white",
+  addBtn: {
+    padding: "12px 24px",
+    backgroundColor: GREEN,
+    color: "#fff",
+    border: "none",
+    borderRadius: "8px",
+    fontSize: "1rem",
+    fontWeight: "600",
+    cursor: "pointer",
   },
-  gardenTitle: {
-    color: "#2e7d32",
-    borderBottom: "2px solid #a5d6a7",
-    paddingBottom: "10px",
-    marginBottom: "20px",
+  plantGrid: {
+    display: "grid",
+    gridTemplateColumns: "repeat(auto-fill, minmax(240px, 1fr))",
+    gap: "24px",
   },
-  imagePlaceholder: {
-    color: "#999",
+  plantCard: {
+    backgroundColor: "#fff",
+    borderRadius: "10px",
+    overflow: "hidden",
+    border: `1px solid ${BORDER}`,
+    boxShadow: "0 2px 6px rgba(0,0,0,0.05)",
+  },
+  cardImg: {
+    height: "160px",
+    overflow: "hidden",
+    backgroundColor: "#f5f5f5",
+  },
+  img: {
+    width: "100%",
+    height: "100%",
+    objectFit: "cover",
+  },
+  noImg: {
+    height: "100%",
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "center",
+    color: "#bbb",
+    fontSize: "0.85rem",
+  },
+  cardBody: {
+    padding: "16px",
+  },
+  cardName: {
+    margin: "0 0 8px",
+    fontSize: "1rem",
+    color: "#222",
+  },
+  cardDetail: {
+    margin: "4px 0",
+    fontSize: "0.9rem",
+    color: "#444",
+  },
+  cardSmall: {
+    margin: "4px 0",
+    fontSize: "0.8rem",
+    color: "#888",
+  },
+  deleteBtn: {
+    marginTop: "12px",
+    padding: "8px 16px",
+    backgroundColor: "#c62828",
+    color: "#fff",
+    border: "none",
+    borderRadius: "6px",
+    cursor: "pointer",
+    fontWeight: "600",
+    fontSize: "0.85rem",
   },
   emptyMessage: {
     gridColumn: "1 / -1",
     textAlign: "center",
-    padding: "40px",
+    padding: "60px 40px",
     color: "#666",
   },
 };

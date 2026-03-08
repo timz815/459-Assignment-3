@@ -1,16 +1,15 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
+import Header from "./Header";
 
 function Register() {
   const [formData, setFormData] = useState({ username: "", password: "" });
   const navigate = useNavigate();
 
-  // handle input changes for the controlled form
   function handleChange(e) {
     setFormData({ ...formData, [e.target.name]: e.target.value });
   }
 
-  // register
   async function handleSubmit(e) {
     e.preventDefault();
     try {
@@ -19,7 +18,6 @@ function Register() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(formData),
       });
-
       const data = await res.json();
       if (res.ok) {
         alert("Registration successful! Please log in.");
@@ -33,49 +31,55 @@ function Register() {
   }
 
   return (
-    <div className="auth-container" style={styles.container}>
-      <div className="card" style={styles.card}>
-        <h2 style={styles.title}>Create Account</h2>
-        <form onSubmit={handleSubmit} className="plant-form">
-          <label>Username</label>
-          <input
-            name="username"
-            value={formData.username}
-            onChange={handleChange}
-            required
-            placeholder="Choose a username"
-          />
-          <label>Password</label>
-          <input
-            type="password"
-            name="password"
-            value={formData.password}
-            onChange={handleChange}
-            required
-            placeholder="Choose a password"
-          />
-          <button type="submit" style={styles.button}>
-            Register
-          </button>
-        </form>
-        <p style={styles.footerText}>
-          Already have an account?{" "}
-          <span onClick={() => navigate("/login")} style={styles.link}>
-            Login here
-          </span>
-        </p>
+    <div style={styles.page}>
+      <Header />
+      <div style={styles.centerer}>
+        <div style={styles.card}>
+          <h2 style={styles.title}>Create Account</h2>
+          <form onSubmit={handleSubmit} className="plant-form">
+            <label>Username</label>
+            <input
+              name="username"
+              value={formData.username}
+              onChange={handleChange}
+              required
+              placeholder="Choose a username"
+            />
+            <label>Password</label>
+            <input
+              type="password"
+              name="password"
+              value={formData.password}
+              onChange={handleChange}
+              required
+              placeholder="Choose a password"
+            />
+            <button type="submit" style={styles.button}>
+              Register
+            </button>
+          </form>
+          <p style={styles.footerText}>
+            Already have an account?{" "}
+            <span onClick={() => navigate("/login")} style={styles.link}>
+              Login here
+            </span>
+          </p>
+        </div>
       </div>
     </div>
   );
 }
 
 const styles = {
-  container: {
+  page: {
+    minHeight: "100vh",
+    backgroundColor: "#f4f7f4",
+  },
+  centerer: {
     display: "flex",
     justifyContent: "center",
     alignItems: "center",
-    minHeight: "100vh",
-    backgroundColor: "#f4f7f4",
+    minHeight: "calc(100vh - 64px)",
   },
   card: {
     width: "100%",
