@@ -1,3 +1,17 @@
+/**
+ * Dashboard Component
+ *
+ * Main user dashboard displaying personal tournaments with management capabilities.
+ *
+ * Key behaviours:
+ * - Fetches user's tournaments from API on mount (requires auth token)
+ * - Displays greeting with authenticated user's username
+ * - Lists tournaments as clickable cards with date range, balance, and description
+ * - Provides delete functionality with permission handling
+ * - Empty state prompts user to create or join tournaments
+ * - Navigation to tournament creation and global tournament list
+ */
+
 import { useContext, useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { AuthContext } from "../context/AuthContext";
@@ -8,6 +22,7 @@ function Dashboard() {
   const { token, user } = useContext(AuthContext);
   const navigate = useNavigate();
 
+  // Fetch user's tournaments on mount when token available
   useEffect(() => {
     if (!token) return;
 
@@ -22,6 +37,7 @@ function Dashboard() {
       .catch((err) => console.error("Fetch error:", err));
   }, [token]);
 
+  // Delete tournament by ID with optimistic UI update
   async function handleDelete(id) {
     try {
       const res = await fetch(`http://localhost:5000/api/tournaments/${id}`, {
@@ -43,93 +59,98 @@ function Dashboard() {
     <div style={styles.page}>
       <Header />
 
-      <div style={styles.content}>
+      <main style={styles.main}>
 
-        {/* Greeting */}
+        {/* User Greeting */}
         {user && (
-          <div style={styles.greetingSection}>
+          <section style={styles.greeting}>
             <h1 style={styles.greetingTitle}>Welcome back, {user.username}</h1>
-          </div>
+          </section>
         )}
 
-        {/* My Tournaments Header with Divider */}
-        <div style={styles.sectionWrapper}>
-          <div style={styles.divider}></div>
+        {/* Tournaments Section */}
+        <section style={styles.section}>
 
+          {/* Section Header with Controls */}
           <div style={styles.sectionHeader}>
-            <h2 style={styles.sectionTitle}>My Tournaments</h2>
+            <div style={styles.divider}></div>
 
-            <div style={styles.headerButtons}>
-              <button
-                style={styles.secondaryBtn}
-                onClick={() => navigate("/tournaments")}
-              >
-                Check All Tournaments
-              </button>
+            <div style={styles.headerContent}>
+              <h2 style={styles.sectionTitle}>My Tournaments</h2>
 
-              <button
-                style={styles.addBtn}
-                onClick={() => navigate("/add-tournament")}
-              >
-                Create Tournament
-              </button>
+              <nav style={styles.headerActions}>
+                <button
+                  style={styles.secondaryBtn}
+                  onClick={() => navigate("/tournaments")}
+                >
+                  Check All Tournaments
+                </button>
+
+                <button
+                  style={styles.primaryBtn}
+                  onClick={() => navigate("/add-tournament")}
+                >
+                  Create Tournament
+                </button>
+              </nav>
             </div>
           </div>
-        </div>
 
-        {/* Tournament List */}
-        <div style={styles.list}>
-          {tournaments.length > 0 ? (
-            tournaments.map((t) => (
-              <div 
-                key={t._id} 
-                style={{ ...styles.card, cursor: "pointer" }}
-                onClick={() => navigate(`/tournaments/${t._id}`)}
-              >
-                <div style={styles.cardLeft}>
-                  <h3 style={styles.cardName}>{t.name}</h3>
+          {/* Tournament Cards */}
+          <div style={styles.grid}>
+            {tournaments.length > 0 ? (
+              tournaments.map((t) => (
+                <article 
+                  key={t._id} 
+                  style={styles.card}
+                  onClick={() => navigate(`/tournaments/${t._id}`)}
+                >
+                  <div style={styles.cardContent}>
+                    <h3 style={styles.cardTitle}>{t.name}</h3>
 
-                  <div style={styles.cardStats}>
-                    <span style={styles.stat}>
-                      {t.start_date?.slice(0, 10)} → {t.end_date?.slice(0, 10)}
-                    </span>
+                    <dl style={styles.cardMeta}>
+                      <dt style={styles.visuallyHidden}>Date Range</dt>
+                      <dd style={styles.metaItem}>
+                        {t.start_date?.slice(0, 10)} → {t.end_date?.slice(0, 10)}
+                      </dd>
 
-                    <span style={styles.statDivider}>·</span>
+                      <span aria-hidden="true" style={styles.metaSeparator}>·</span>
 
-                    <span style={styles.stat}>
-                      ${t.starting_balance} starting balance
-                    </span>
+                      <dt style={styles.visuallyHidden}>Starting Balance</dt>
+                      <dd style={styles.metaItem}>
+                        ${t.starting_balance} starting balance
+                      </dd>
+                    </dl>
+
+                    {t.description && (
+                      <p style={styles.cardDescription}>{t.description}</p>
+                    )}
                   </div>
 
-                  {t.description && (
-                    <p style={styles.description}>{t.description}</p>
-                  )}
-                </div>
-
-                <div style={styles.cardRight}>
-                  <button
-                    style={styles.deleteBtn}
-                    onClick={(e) => {
-                      e.stopPropagation(); // Prevent card click when clicking delete
-                      handleDelete(t._id);
-                    }}
-                  >
-                    Delete
-                  </button>
-                </div>
+                  <div style={styles.cardActions}>
+                    <button
+                      style={styles.deleteBtn}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleDelete(t._id);
+                      }}
+                    >
+                      Delete
+                    </button>
+                  </div>
+                </article>
+              ))
+            ) : (
+              <div style={styles.emptyState}>
+                <p>You have no tournaments yet.</p>
+                <p>Create your own or join other tournaments</p>
               </div>
-            ))
-          ) : (
-            <div style={styles.emptyMessage}>
-              <p>You have no tournaments yet.</p>
-              <p>
-                Create your own or join other tournaments                  
-              </p>
-            </div>
-          )}
-        </div>
+            )}
+          </div>
 
-      </div>
+        </section>
+
+      </main>
     </div>
   );
 }
@@ -146,14 +167,14 @@ const styles = {
     color: TEXT,
   },
 
-  content: {
-    maxWidth: "1250px",
+  main: {
+    maxWidth: "78.125rem",
     margin: "0 auto",
-    padding: "40px 20px",
+    padding: "2.5rem 1.25rem",
   },
 
-  greetingSection: {
-    marginBottom: "50px",
+  greeting: {
+    marginBottom: "3.125rem",
   },
 
   greetingTitle: {
@@ -162,17 +183,21 @@ const styles = {
     fontWeight: "700",
   },
 
-  sectionWrapper: {
-    marginBottom: "24px",
+  section: {
+    marginBottom: "1.5rem",
+  },
+
+  sectionHeader: {
+    marginBottom: "1.5rem",
   },
 
   divider: {
     height: "1px",
     backgroundColor: "#3a3a3a",
-    marginBottom: "24px",
+    marginBottom: "1.5rem",
   },
 
-  sectionHeader: {
+  headerContent: {
     display: "flex",
     justifyContent: "space-between",
     alignItems: "center",
@@ -184,103 +209,118 @@ const styles = {
     fontWeight: "600",
   },
 
-  headerButtons: {
+  headerActions: {
     display: "flex",
-    gap: "12px",
+    gap: "0.75rem",
   },
 
-  addBtn: {
-    padding: "12px 24px",
+  primaryBtn: {
+    padding: "0.75rem 1.5rem",
     backgroundColor: BLUE,
     color: "#fff",
     border: "none",
-    borderRadius: "8px",
+    borderRadius: "0.5rem",
     fontSize: "1rem",
     fontWeight: "600",
     cursor: "pointer",
   },
 
   secondaryBtn: {
-    padding: "12px 24px",
+    padding: "0.75rem 1.5rem",
     backgroundColor: "transparent",
     border: "1px solid #444",
     color: "#ccc",
-    borderRadius: "8px",
+    borderRadius: "0.5rem",
     fontSize: "1rem",
     fontWeight: "600",
     cursor: "pointer",
   },
 
-  list: {
+  grid: {
     display: "flex",
     flexDirection: "column",
-    gap: "12px",
+    gap: "0.75rem",
   },
 
   card: {
     backgroundColor: "#333333",
-    borderRadius: "10px",
-    padding: "20px 24px",
+    borderRadius: "0.625rem",
+    padding: "1.25rem 1.5rem",
     display: "flex",
     justifyContent: "space-between",
     alignItems: "center",
-    gap: "20px",
+    gap: "1.25rem",
+    cursor: "pointer",
   },
 
-  cardLeft: {
+  cardContent: {
     display: "flex",
     flexDirection: "column",
-    gap: "6px",
+    gap: "0.375rem",
   },
 
-  cardName: {
+  cardTitle: {
     margin: 0,
     fontSize: "1rem",
     color: TEXT,
     fontWeight: "600",
   },
 
-  cardStats: {
+  cardMeta: {
     display: "flex",
     alignItems: "center",
-    gap: "8px",
+    gap: "0.5rem",
     flexWrap: "wrap",
+    margin: 0,
   },
 
-  stat: {
+  metaItem: {
     fontSize: "0.85rem",
     color: "#aaa",
+    margin: 0,
   },
 
-  statDivider: {
+  metaSeparator: {
     color: "#555",
   },
 
-  description: {
-    margin: "4px 0 0",
+  cardDescription: {
+    margin: "0.25rem 0 0",
     fontSize: "0.85rem",
     color: "#777",
   },
 
-  cardRight: {
+  cardActions: {
     flexShrink: 0,
   },
 
   deleteBtn: {
-    padding: "8px 20px",
+    padding: "0.5rem 1.25rem",
     backgroundColor: "transparent",
     color: "#ff6b6b",
     border: "1px solid #ff6b6b",
-    borderRadius: "6px",
+    borderRadius: "0.375rem",
     cursor: "pointer",
     fontWeight: "600",
     fontSize: "0.85rem",
   },
 
-  emptyMessage: {
+  emptyState: {
     textAlign: "center",
-    padding: "60px 40px",
+    padding: "3.75rem 2.5rem",
     color: "#666",
+  },
+
+  visuallyHidden: {
+    position: "absolute",
+    width: "1px",
+    height: "1px",
+    padding: 0,
+    margin: "-1px",
+    overflow: "hidden",
+    clip: "rect(0, 0, 0, 0)",
+    whiteSpace: "nowrap",
+    border: 0,
   },
 };
 

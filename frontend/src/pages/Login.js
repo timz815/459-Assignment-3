@@ -1,3 +1,16 @@
+/**
+ * Login Component
+ *
+ * Authentication form for existing users to access their accounts.
+ *
+ * Key behaviours:
+ * - Redirects authenticated users to dashboard immediately
+ * - Validates credentials against backend API
+ * - Displays server-side and client-side error messages
+ * - Stores auth token via context on successful login
+ * - Provides navigation link to registration page
+ */
+
 import { useContext, useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { AuthContext } from "../context/AuthContext";
@@ -9,14 +22,17 @@ function Login() {
   const { token, login } = useContext(AuthContext);
   const navigate = useNavigate();
 
+  // Redirect if already authenticated
   useEffect(() => {
     if (token) navigate("/dashboard");
   }, [token, navigate]);
 
+  // Update form state on input change
   function handleChange(e) {
     setFormData({ ...formData, [e.target.name]: e.target.value });
   }
 
+  // Submit credentials to API and handle response
   async function handleSubmit(e) {
     e.preventDefault();
     setError("");
@@ -41,15 +57,16 @@ function Login() {
   return (
     <div style={styles.page}>
       <Header />
-      <div style={styles.container}>
-        <div style={styles.card}>
-          <h2 style={styles.title}>Login</h2>
+      <main style={styles.main}>
+        <article style={styles.card}>
+          <h1 style={styles.title}>Login</h1>
 
-          {error && <div style={styles.errorBanner}>{error}</div>}
+          {error && <p role="alert" style={styles.error}>{error}</p>}
 
           <form onSubmit={handleSubmit} style={styles.form}>
-            <label style={styles.label}>Username</label>
+            <label htmlFor="username" style={styles.label}>Username</label>
             <input
+              id="username"
               name="username"
               type="text"
               placeholder="Your username"
@@ -57,8 +74,10 @@ function Login() {
               required
               style={styles.input}
             />
-            <label style={styles.label}>Password</label>
+            
+            <label htmlFor="password" style={styles.label}>Password</label>
             <input
+              id="password"
               name="password"
               type="password"
               placeholder="Your password"
@@ -66,15 +85,18 @@ function Login() {
               required
               style={styles.input}
             />
-            <button type="submit" style={styles.button}>Sign In</button>
+            
+            <button type="submit" style={styles.submit}>Sign In</button>
           </form>
 
-          <p style={styles.footerText}>
-            Need an account?{" "}
-            <Link to="/register" style={styles.link}>Register here</Link>
-          </p>
-        </div>
-      </div>
+          <footer style={styles.footer}>
+            <p style={styles.footerText}>
+              Need an account?{" "}
+              <Link to="/register" style={styles.link}>Register here</Link>
+            </p>
+          </footer>
+        </article>
+      </main>
     </div>
   );
 }
@@ -87,68 +109,70 @@ const styles = {
     minHeight: "100vh",
     backgroundColor: "#1A1A1A",
   },
-  container: {
+  main: {
     display: "flex",
     justifyContent: "center",
     alignItems: "center",
-    minHeight: "calc(100vh - 64px)",
+    minHeight: "calc(100vh - 4rem)",
   },
   card: {
     width: "100%",
-    maxWidth: "400px",
+    maxWidth: "25rem",
     padding: "2rem",
     backgroundColor: "#333333",
-    borderRadius: "8px",
-    boxShadow: "0 4px 20px rgba(0,0,0,0.4)",
+    borderRadius: "0.5rem",
+    boxShadow: "0 0.25rem 1.25rem rgba(0,0,0,0.4)",
   },
   title: {
     textAlign: "center",
     color: TEXT,
     marginBottom: "1.5rem",
   },
-  errorBanner: {
+  error: {
     backgroundColor: "#4a1a1a",
     color: "#ff6b6b",
-    padding: "10px",
-    borderRadius: "6px",
-    marginBottom: "16px",
+    padding: "0.625rem",
+    borderRadius: "0.375rem",
+    marginBottom: "1rem",
     fontSize: "0.9rem",
     textAlign: "center",
   },
   form: {
     display: "flex",
     flexDirection: "column",
-    gap: "6px",
+    gap: "0.375rem",
   },
   label: {
     fontSize: "0.8rem",
     fontWeight: "600",
     color: "#aaa",
-    marginTop: "10px",
+    marginTop: "0.625rem",
   },
   input: {
-    padding: "10px 14px",
-    borderRadius: "6px",
+    padding: "0.625rem 0.875rem",
+    borderRadius: "0.375rem",
     border: "1px solid #444",
     backgroundColor: "#2a2a2a",
     color: TEXT,
     fontSize: "1rem",
     outline: "none",
   },
-  button: {
+  submit: {
     marginTop: "1rem",
     backgroundColor: BLUE,
     color: "#fff",
     border: "none",
-    padding: "10px",
-    borderRadius: "6px",
+    padding: "0.625rem",
+    borderRadius: "0.375rem",
     cursor: "pointer",
     width: "100%",
     fontWeight: "600",
     fontSize: "1rem",
   },
-  footerText: {
+  footer: {
     marginTop: "1.5rem",
+  },
+  footerText: {
     textAlign: "center",
     fontSize: "0.9rem",
     color: "#888",

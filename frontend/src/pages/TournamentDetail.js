@@ -1,3 +1,17 @@
+/**
+ * TournamentDetail Component
+ *
+ * Displays full tournament information with participant management and owner controls.
+ *
+ * Key behaviours:
+ * - Fetches tournament data and participant list on mount
+ * - Determines user role (owner/participant/guest) for conditional UI rendering
+ * - Handles join/leave actions with optimistic UI updates
+ * - Provides owner controls for open/close status and tournament deletion
+ * - Shows ranked participant list with cash balances
+ * - Displays status badges with color-coded styling
+ */
+
 import { useContext, useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { AuthContext } from "../context/AuthContext";
@@ -14,6 +28,7 @@ function TournamentDetail() {
   const [isOwner, setIsOwner] = useState(false);
   const [loading, setLoading] = useState(true);
 
+  // Fetch tournament details and participant data
   useEffect(() => {
     async function fetchData() {
       try {
@@ -43,6 +58,7 @@ function TournamentDetail() {
     fetchData();
   }, [id, user]);
 
+  // Join tournament as authenticated user
   async function handleJoin() {
     try {
       const res = await fetch("http://localhost:5000/api/tournaments/" + id + "/join", {
@@ -63,6 +79,7 @@ function TournamentDetail() {
     }
   }
 
+  // Leave tournament and refresh participant list
   async function handleLeave() {
     try {
       const res = await fetch("http://localhost:5000/api/tournaments/" + id + "/leave", {
@@ -83,6 +100,7 @@ function TournamentDetail() {
     }
   }
 
+  // Toggle tournament open/closed status (owner only)
   async function handleClose() {
     try {
       const res = await fetch("http://localhost:5000/api/tournaments/" + id + "/close", {
@@ -100,6 +118,7 @@ function TournamentDetail() {
     }
   }
 
+  // Delete tournament with confirmation (owner only)
   async function handleDeleteTournament() {
     if (!window.confirm("Are you sure you want to delete this tournament? This cannot be undone.")) return;
     try {
@@ -118,6 +137,7 @@ function TournamentDetail() {
     }
   }
 
+  // Returns color scheme based on tournament status
   function getStatusStyle(status) {
     switch (status) {
       case "open":   return { bg: "#0a3a4a", color: "#0F9FEA" };
@@ -132,7 +152,9 @@ function TournamentDetail() {
     return (
       <div style={styles.page}>
         <Header />
-        <div style={styles.loading}>Loading...</div>
+        <main style={styles.main}>
+          <p style={styles.statusMessage}>Loading...</p>
+        </main>
       </div>
     );
   }
@@ -141,7 +163,9 @@ function TournamentDetail() {
     return (
       <div style={styles.page}>
         <Header />
-        <div style={styles.loading}>Tournament not found.</div>
+        <main style={styles.main}>
+          <p style={styles.statusMessage}>Tournament not found.</p>
+        </main>
       </div>
     );
   }
@@ -153,12 +177,14 @@ function TournamentDetail() {
     <div style={styles.page}>
       <Header />
 
-      <div style={styles.content}>
-        <button style={styles.backBtn} onClick={() => navigate("/tournaments")}>
-          ← Back to Tournaments
-        </button>
+      <main style={styles.main}>
+        <nav style={styles.backNavigation}>
+          <button style={styles.backButton} onClick={() => navigate("/tournaments")}>
+            ← Back to Tournaments
+          </button>
+        </nav>
 
-        <div style={styles.tournamentHeader}>
+        <header style={styles.tournamentHeader}>
           <div style={styles.titleRow}>
             <h1 style={styles.title}>{tournament.name}</h1>
             <span style={{ ...styles.badge, backgroundColor: bg, color }}>
@@ -166,93 +192,102 @@ function TournamentDetail() {
             </span>
           </div>
 
-          <div style={styles.metaRow}>
-            <span style={styles.meta}>{tournament.start_date?.slice(0, 10)} → {tournament.end_date?.slice(0, 10)}</span>
-            <span style={styles.metaDivider}>·</span>
-            <span style={styles.meta}>${tournament.starting_balance} starting balance</span>
-            <span style={styles.metaDivider}>·</span>
-            <span style={styles.meta}>{participants.length} participants</span>
+          <dl style={styles.metaList}>
+            <dt style={styles.visuallyHidden}>Date Range</dt>
+            <dd style={styles.metaItem}>{tournament.start_date?.slice(0, 10)} → {tournament.end_date?.slice(0, 10)}</dd>
+            
+            <span aria-hidden="true" style={styles.metaSeparator}>·</span>
+            
+            <dt style={styles.visuallyHidden}>Starting Balance</dt>
+            <dd style={styles.metaItem}>${tournament.starting_balance} starting balance</dd>
+            
+            <span aria-hidden="true" style={styles.metaSeparator}>·</span>
+            
+            <dt style={styles.visuallyHidden}>Participant Count</dt>
+            <dd style={styles.metaItem}>{participants.length} participants</dd>
+            
             {tournament.owner?.username && (
               <>
-                <span style={styles.metaDivider}>·</span>
-                <span style={styles.meta}>Hosted by {tournament.owner.username}</span>
+                <span aria-hidden="true" style={styles.metaSeparator}>·</span>
+                <dt style={styles.visuallyHidden}>Host</dt>
+                <dd style={styles.metaItem}>Hosted by {tournament.owner.username}</dd>
               </>
             )}
-          </div>
+          </dl>
 
           {tournament.description && (
             <p style={styles.description}>{tournament.description}</p>
           )}
-        </div>
+        </header>
 
-        <div style={styles.statusCard}>
+        <section style={styles.actionPanel}>
           {!token ? (
-            <div style={styles.statusRow}>
-              <p style={styles.statusMsg}>Login to join this tournament.</p>
-              <button style={styles.joinBtn} onClick={() => navigate("/login")}>
+            <div style={styles.actionRow}>
+              <p style={styles.actionText}>Login to join this tournament.</p>
+              <button style={styles.primaryButton} onClick={() => navigate("/login")}>
                 Login to Join
               </button>
             </div>
           ) : isOwner ? (
-            <div style={styles.statusRow}>
-              <p style={styles.statusMsgBlue}>You created this tournament.</p>
-              <div style={{ display: "flex", gap: "12px" }}>
-                <button style={styles.closeBtn} onClick={handleClose}>
+            <div style={styles.actionRow}>
+              <p style={styles.ownerText}>You created this tournament.</p>
+              <div style={styles.ownerActions}>
+                <button style={styles.secondaryButton} onClick={handleClose}>
                   {tournament.status === "closed" ? "Open Joining" : "Close Joining"}
                 </button>
-                <button style={styles.deleteBtn} onClick={handleDeleteTournament}>
+                <button style={styles.dangerButton} onClick={handleDeleteTournament}>
                   Delete Tournament
                 </button>
               </div>
             </div>
           ) : isParticipant ? (
-            <div style={styles.statusRow}>
-              <p style={styles.statusMsgGreen}>✓ You are participating in this tournament.</p>
+            <div style={styles.actionRow}>
+              <p style={styles.successText}>✓ You are participating in this tournament.</p>
               {canJoin && (
-                <button style={styles.leaveBtn} onClick={handleLeave}>
+                <button style={styles.dangerButton} onClick={handleLeave}>
                   Leave Tournament
                 </button>
               )}
             </div>
           ) : (
-            <div style={styles.statusRow}>
-              <p style={styles.statusMsg}>You are not part of this tournament.</p>
+            <div style={styles.actionRow}>
+              <p style={styles.actionText}>You are not part of this tournament.</p>
               {canJoin ? (
-                <button style={styles.joinBtn} onClick={handleJoin}>
+                <button style={styles.primaryButton} onClick={handleJoin}>
                   Join Tournament
                 </button>
               ) : (
-                <span style={styles.closedMsg}>Tournament is {tournament.status}</span>
+                <span style={styles.closedText}>Tournament is {tournament.status}</span>
               )}
             </div>
           )}
-        </div>
+        </section>
 
-        <div style={styles.section}>
+        <section style={styles.participantsSection}>
           <h2 style={styles.sectionTitle}>
             Participants
-            <span style={styles.sectionCount}> ({participants.length})</span>
+            <span style={styles.countBadge}> ({participants.length})</span>
           </h2>
 
           {participants.length > 0 ? (
-            <div style={styles.participantList}>
+            <ol style={styles.leaderboard}>
               {participants.map((p, index) => (
-                <div key={p._id} style={styles.participantRow}>
-                  <div style={styles.participantLeft}>
+                <li key={p._id} style={styles.leaderboardItem}>
+                  <div style={styles.participantInfo}>
                     <span style={styles.rank}>#{index + 1}</span>
-                    <span style={styles.username}>{p.user?.username || "Unknown"}</span>
+                    <span style={styles.participantName}>{p.user?.username || "Unknown"}</span>
                   </div>
-                  <span style={styles.balance}>${p.cash_balance?.toLocaleString()}</span>
-                </div>
+                  <output style={styles.balance}>${p.cash_balance?.toLocaleString()}</output>
+                </li>
               ))}
-            </div>
+            </ol>
           ) : (
-            <div style={styles.empty}>
+            <div style={styles.emptyState}>
               <p>No participants yet. Be the first to join!</p>
             </div>
           )}
-        </div>
-      </div>
+        </section>
+      </main>
     </div>
   );
 }
@@ -263,37 +298,39 @@ const TEXT = "#F9F9F9";
 
 const styles = {
   page: { minHeight: "100vh", backgroundColor: BG, color: TEXT, fontFamily: "'Segoe UI', sans-serif" },
-  content: { maxWidth: "1250px", margin: "0 auto", padding: "40px 20px 80px" },
-  loading: { textAlign: "center", padding: "80px", color: "#888" },
-  backBtn: { background: "none", border: "none", color: BLUE, fontWeight: "600", fontSize: "0.9rem", cursor: "pointer", padding: "0 0 24px 0", display: "block" },
-  tournamentHeader: { marginBottom: "24px" },
-  titleRow: { display: "flex", alignItems: "center", gap: "16px", marginBottom: "12px", flexWrap: "wrap" },
+  main: { maxWidth: "78.125rem", margin: "0 auto", padding: "2.5rem 1.25rem 5rem" },
+  statusMessage: { textAlign: "center", padding: "5rem", color: "#888" },
+  backNavigation: { marginBottom: "1.5rem" },
+  backButton: { background: "none", border: "none", color: BLUE, fontWeight: "600", fontSize: "0.9rem", cursor: "pointer", padding: 0 },
+  tournamentHeader: { marginBottom: "1.5rem" },
+  titleRow: { display: "flex", alignItems: "center", gap: "1rem", marginBottom: "0.75rem", flexWrap: "wrap" },
   title: { margin: 0, fontSize: "2rem", fontWeight: "700", color: TEXT },
-  badge: { padding: "4px 14px", borderRadius: "20px", fontSize: "0.8rem", fontWeight: "600", whiteSpace: "nowrap" },
-  metaRow: { display: "flex", alignItems: "center", gap: "10px", flexWrap: "wrap", marginBottom: "12px" },
-  meta: { fontSize: "0.9rem", color: "#aaa" },
-  metaDivider: { color: "#444" },
-  description: { color: "#888", fontSize: "0.95rem", marginTop: "12px", lineHeight: 1.6 },
-  statusCard: { backgroundColor: "#2a2a2a", border: "1px solid #3a3a3a", borderRadius: "10px", padding: "20px 24px", marginBottom: "32px" },
-  statusRow: { display: "flex", justifyContent: "space-between", alignItems: "center", gap: "20px" },
-  statusMsg: { margin: 0, color: "#888", fontSize: "0.95rem" },
-  statusMsgGreen: { margin: 0, color: "#4caf50", fontSize: "0.95rem", fontWeight: "600" },
-  statusMsgBlue: { margin: 0, color: BLUE, fontSize: "0.95rem", fontWeight: "600" },
-  joinBtn: { padding: "10px 24px", backgroundColor: BLUE, color: "#fff", border: "none", borderRadius: "6px", fontWeight: "600", fontSize: "0.95rem", cursor: "pointer", whiteSpace: "nowrap" },
-  leaveBtn: { padding: "10px 24px", backgroundColor: "transparent", color: "#ff6b6b", border: "1px solid #ff6b6b", borderRadius: "6px", fontWeight: "600", fontSize: "0.95rem", cursor: "pointer", whiteSpace: "nowrap" },
-  closeBtn: { padding: "10px 24px", backgroundColor: "transparent", color: "#ffaa55", border: "1px solid #ffaa55", borderRadius: "6px", fontWeight: "600", fontSize: "0.95rem", cursor: "pointer", whiteSpace: "nowrap" },
-  deleteBtn: { padding: "10px 24px", backgroundColor: "transparent", color: "#ff6b6b", border: "1px solid #ff6b6b", borderRadius: "6px", fontWeight: "600", fontSize: "0.95rem", cursor: "pointer", whiteSpace: "nowrap" },
-  closedMsg: { color: "#666", fontSize: "0.9rem", fontStyle: "italic" },
-  section: {},
-  sectionTitle: { fontSize: "1.2rem", fontWeight: "600", color: TEXT, marginBottom: "16px", paddingBottom: "12px", borderBottom: "1px solid #3a3a3a" },
-  sectionCount: { color: "#888", fontWeight: "400", fontSize: "1rem" },
-  participantList: { display: "flex", flexDirection: "column", gap: "8px" },
-  participantRow: { display: "flex", justifyContent: "space-between", alignItems: "center", backgroundColor: "#252525", padding: "14px 20px", borderRadius: "8px" },
-  participantLeft: { display: "flex", alignItems: "center", gap: "14px" },
-  rank: { color: "#555", fontSize: "0.85rem", fontWeight: "600", minWidth: "28px" },
-  username: { color: TEXT, fontWeight: "600", fontSize: "0.95rem" },
+  badge: { padding: "0.25rem 0.875rem", borderRadius: "1.25rem", fontSize: "0.8rem", fontWeight: "600", whiteSpace: "nowrap" },
+  metaList: { display: "flex", alignItems: "center", gap: "0.625rem", flexWrap: "wrap", margin: "0 0 0.75rem 0" },
+  metaItem: { fontSize: "0.9rem", color: "#aaa", margin: 0 },
+  metaSeparator: { color: "#444" },
+  description: { color: "#888", fontSize: "0.95rem", marginTop: "0.75rem", lineHeight: 1.6 },
+  actionPanel: { backgroundColor: "#2a2a2a", border: "1px solid #3a3a3a", borderRadius: "0.625rem", padding: "1.25rem 1.5rem", marginBottom: "2rem" },
+  actionRow: { display: "flex", justifyContent: "space-between", alignItems: "center", gap: "1.25rem" },
+  actionText: { margin: 0, color: "#888", fontSize: "0.95rem" },
+  successText: { margin: 0, color: "#4caf50", fontSize: "0.95rem", fontWeight: "600" },
+  ownerText: { margin: 0, color: BLUE, fontSize: "0.95rem", fontWeight: "600" },
+  ownerActions: { display: "flex", gap: "0.75rem" },
+  primaryButton: { padding: "0.625rem 1.5rem", backgroundColor: BLUE, color: "#fff", border: "none", borderRadius: "0.375rem", fontWeight: "600", fontSize: "0.95rem", cursor: "pointer", whiteSpace: "nowrap" },
+  secondaryButton: { padding: "0.625rem 1.5rem", backgroundColor: "transparent", color: "#ffaa55", border: "1px solid #ffaa55", borderRadius: "0.375rem", fontWeight: "600", fontSize: "0.95rem", cursor: "pointer", whiteSpace: "nowrap" },
+  dangerButton: { padding: "0.625rem 1.5rem", backgroundColor: "transparent", color: "#ff6b6b", border: "1px solid #ff6b6b", borderRadius: "0.375rem", fontWeight: "600", fontSize: "0.95rem", cursor: "pointer", whiteSpace: "nowrap" },
+  closedText: { color: "#666", fontSize: "0.9rem", fontStyle: "italic" },
+  participantsSection: {},
+  sectionTitle: { fontSize: "1.2rem", fontWeight: "600", color: TEXT, marginBottom: "1rem", paddingBottom: "0.75rem", borderBottom: "1px solid #3a3a3a" },
+  countBadge: { color: "#888", fontWeight: "400", fontSize: "1rem" },
+  leaderboard: { display: "flex", flexDirection: "column", gap: "0.5rem", listStyle: "none", padding: 0, margin: 0 },
+  leaderboardItem: { display: "flex", justifyContent: "space-between", alignItems: "center", backgroundColor: "#252525", padding: "0.875rem 1.25rem", borderRadius: "0.5rem" },
+  participantInfo: { display: "flex", alignItems: "center", gap: "0.875rem" },
+  rank: { color: "#555", fontSize: "0.85rem", fontWeight: "600", minWidth: "1.75rem" },
+  participantName: { color: TEXT, fontWeight: "600", fontSize: "0.95rem" },
   balance: { color: "#4caf50", fontWeight: "700", fontSize: "0.95rem" },
-  empty: { textAlign: "center", padding: "40px", color: "#666" },
+  emptyState: { textAlign: "center", padding: "2.5rem", color: "#666" },
+  visuallyHidden: { position: "absolute", width: "1px", height: "1px", padding: 0, margin: "-1px", overflow: "hidden", clip: "rect(0, 0, 0, 0)", whiteSpace: "nowrap", border: 0 },
 };
 
 export default TournamentDetail;

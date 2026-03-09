@@ -1,10 +1,25 @@
+/**
+ * Tournament Routes
+ *
+ * Express router handling all tournament-related endpoints including CRUD operations,
+ * participant management, and owner controls.
+ *
+ * Key behaviours:
+ * - Public read access for tournament listings and details
+ * - Authentication required for creation, joining, leaving, and owner operations
+ * - Automatic creator participation on tournament creation
+ * - Status validation for join operations (open/active only)
+ * - Owner verification for close/reopen and delete operations
+ * - Cascading delete of participants when tournament is deleted
+ */
+
 const express = require("express");
 const router = express.Router();
 const Tournament = require("../models/Tournament");
 const Participant = require("../models/Participant");
 const verifyToken = require("../middleware/authMiddleware");
 
-// ── GET all tournaments (public) ─────────────────────────────────────────────
+// GET all tournaments (public)
 router.get("/", async (req, res) => {
   try {
     const tournaments = await Tournament.find().sort({ createdAt: -1 });
@@ -14,7 +29,7 @@ router.get("/", async (req, res) => {
   }
 });
 
-// ── GET my tournaments (created by me) ───────────────────────────────────────
+// GET my tournaments (created by me)
 router.get("/my-tournaments", verifyToken, async (req, res) => {
   try {
     const tournaments = await Tournament.find({ owner: req.userId }).sort({ createdAt: -1 });
@@ -24,7 +39,7 @@ router.get("/my-tournaments", verifyToken, async (req, res) => {
   }
 });
 
-// ── GET single tournament by ID ──────────────────────────────────────────────
+// GET single tournament by ID
 router.get("/:id", async (req, res) => {
   try {
     const tournament = await Tournament.findById(req.params.id).populate("owner", "username");
@@ -35,7 +50,7 @@ router.get("/:id", async (req, res) => {
   }
 });
 
-// ── GET participants for a tournament ────────────────────────────────────────
+// GET participants for a tournament
 router.get("/:id/participants", async (req, res) => {
   try {
     const participants = await Participant.find({ tournament: req.params.id })
@@ -47,7 +62,7 @@ router.get("/:id/participants", async (req, res) => {
   }
 });
 
-// ── POST create a new tournament ─────────────────────────────────────────────
+// POST create a new tournament
 router.post("/", verifyToken, async (req, res) => {
   try {
     const { start_date, end_date, name, starting_balance, description } = req.body;
@@ -82,7 +97,7 @@ router.post("/", verifyToken, async (req, res) => {
     });
     await tournament.save();
 
-    // automatically add the creator as a participant
+    // Automatically add creator as participant
     const participant = new Participant({
       tournament: tournament._id,
       user: req.userId,
@@ -96,23 +111,27 @@ router.post("/", verifyToken, async (req, res) => {
   }
 });
 
-// ── POST join a tournament ────────────────────────────────────────────────────
+// POST join a tournament
 router.post("/:id/join", verifyToken, async (req, res) => {
   try {
     const tournament = await Tournament.findById(req.params.id);
 
-    if (!tournament)
+    if (!tournament) {
       return res.status(404).json({ message: "Tournament not found" });
+    }
 
-    if (tournament.status === "closed" || tournament.status === "ended")
+    if (tournament.status === "closed" || tournament.status === "ended") {
       return res.status(403).json({ message: "This tournament is no longer accepting players." });
+    }
 
     const existing = await Participant.findOne({
       tournament: req.params.id,
       user: req.userId,
     });
-    if (existing)
+    
+    if (existing) {
       return res.status(400).json({ message: "You have already joined this tournament." });
+    }
 
     const participant = new Participant({
       tournament: req.params.id,
@@ -127,7 +146,7 @@ router.post("/:id/join", verifyToken, async (req, res) => {
   }
 });
 
-// ── DELETE leave a tournament ─────────────────────────────────────────────────
+// DELETE leave a tournament
 router.delete("/:id/leave", verifyToken, async (req, res) => {
   try {
     const participant = await Participant.findOneAndDelete({
@@ -135,8 +154,9 @@ router.delete("/:id/leave", verifyToken, async (req, res) => {
       user: req.userId,
     });
 
-    if (!participant)
+    if (!participant) {
       return res.status(404).json({ message: "You are not in this tournament." });
+    }
 
     res.json({ message: "You have left the tournament." });
   } catch (err) {
@@ -144,18 +164,20 @@ router.delete("/:id/leave", verifyToken, async (req, res) => {
   }
 });
 
-// ── PATCH close/reopen a tournament (owner only) ─────────────────────────────
+// PATCH close/reopen a tournament (owner only)
 router.patch("/:id/close", verifyToken, async (req, res) => {
   try {
     const tournament = await Tournament.findById(req.params.id);
 
-    if (!tournament)
+    if (!tournament) {
       return res.status(404).json({ message: "Tournament not found" });
+    }
 
-    if (tournament.owner.toString() !== req.userId)
+    if (tournament.owner.toString() !== req.userId) {
       return res.status(403).json({ message: "Only the owner can close this tournament." });
+    }
 
-    // toggle between open and closed
+    // Toggle between open and closed
     tournament.status = tournament.status === "closed" ? "open" : "closed";
     await tournament.save();
 
@@ -165,17 +187,20 @@ router.patch("/:id/close", verifyToken, async (req, res) => {
   }
 });
 
-// ── DELETE a tournament (owner only) ─────────────────────────────────────────
+// DELETE a tournament (owner only)
 router.delete("/:id", verifyToken, async (req, res) => {
   try {
     const tournament = await Tournament.findById(req.params.id);
 
-    if (!tournament)
+    if (!tournament) {
       return res.status(404).json({ message: "Tournament not found" });
+    }
 
-    if (tournament.owner.toString() !== req.userId)
+    if (tournament.owner.toString() !== req.userId) {
       return res.status(403).json({ message: "Forbidden: You do not own this tournament." });
+    }
 
+    // Cascade delete participants
     await Participant.deleteMany({ tournament: req.params.id });
     await Tournament.findByIdAndDelete(req.params.id);
 

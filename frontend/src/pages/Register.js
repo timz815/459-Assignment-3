@@ -1,15 +1,29 @@
+/**
+ * Register Component
+ *
+ * New user registration form with account creation and navigation to login.
+ *
+ * Key behaviours:
+ * - Captures username and password via controlled inputs
+ * - Submits credentials to backend registration endpoint
+ * - Alerts user of success/failure and redirects to login on success
+ * - Provides navigation link for existing users to access login page
+ */
+
 import { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import Header from "../components/Header";
 
 function Register() {
   const [formData, setFormData] = useState({ username: "", password: "" });
   const navigate = useNavigate();
 
+  // Update form state on input change
   function handleChange(e) {
     setFormData({ ...formData, [e.target.name]: e.target.value });
   }
 
+  // Submit registration data to API and handle response
   async function handleSubmit(e) {
     e.preventDefault();
     try {
@@ -33,12 +47,14 @@ function Register() {
   return (
     <div style={styles.page}>
       <Header />
-      <div style={styles.centerer}>
-        <div style={styles.card}>
-          <h2 style={styles.title}>Create Account</h2>
+      <main style={styles.main}>
+        <article style={styles.card}>
+          <h1 style={styles.title}>Create Account</h1>
+          
           <form onSubmit={handleSubmit} style={styles.form}>
-            <label style={styles.label}>Username</label>
+            <label htmlFor="username" style={styles.label}>Username</label>
             <input
+              id="username"
               name="username"
               value={formData.username}
               onChange={handleChange}
@@ -46,8 +62,10 @@ function Register() {
               placeholder="Choose a username"
               style={styles.input}
             />
-            <label style={styles.label}>Password</label>
+            
+            <label htmlFor="password" style={styles.label}>Password</label>
             <input
+              id="password"
               type="password"
               name="password"
               value={formData.password}
@@ -56,18 +74,22 @@ function Register() {
               placeholder="Choose a password"
               style={styles.input}
             />
-            <button type="submit" style={styles.button}>
+            
+            <button type="submit" style={styles.submit}>
               Register
             </button>
           </form>
-          <p style={styles.footerText}>
-            Already have an account?{" "}
-            <span onClick={() => navigate("/login")} style={styles.link}>
-              Login here
-            </span>
-          </p>
-        </div>
-      </div>
+          
+          <footer style={styles.footer}>
+            <p style={styles.footerText}>
+              Already have an account?{" "}
+              <Link to="/login" style={styles.link}>
+                Login here
+              </Link>
+            </p>
+          </footer>
+        </article>
+      </main>
     </div>
   );
 }
@@ -80,19 +102,19 @@ const styles = {
     minHeight: "100vh",
     backgroundColor: "#1A1A1A",
   },
-  centerer: {
+  main: {
     display: "flex",
     justifyContent: "center",
     alignItems: "center",
-    minHeight: "calc(100vh - 64px)",
+    minHeight: "calc(100vh - 4rem)",
   },
   card: {
     width: "100%",
-    maxWidth: "400px",
+    maxWidth: "25rem",
     padding: "2rem",
     backgroundColor: "#333333",
-    borderRadius: "8px",
-    boxShadow: "0 4px 20px rgba(0,0,0,0.4)",
+    borderRadius: "0.5rem",
+    boxShadow: "0 0.25rem 1.25rem rgba(0,0,0,0.4)",
   },
   title: {
     textAlign: "center",
@@ -102,37 +124,39 @@ const styles = {
   form: {
     display: "flex",
     flexDirection: "column",
-    gap: "6px",
+    gap: "0.375rem",
   },
   label: {
     fontSize: "0.8rem",
     fontWeight: "600",
     color: "#aaa",
-    marginTop: "10px",
+    marginTop: "0.625rem",
   },
   input: {
-    padding: "10px 14px",
-    borderRadius: "6px",
+    padding: "0.625rem 0.875rem",
+    borderRadius: "0.375rem",
     border: "1px solid #444",
     backgroundColor: "#2a2a2a",
     color: TEXT,
     fontSize: "1rem",
     outline: "none",
   },
-  button: {
+  submit: {
     marginTop: "1.2rem",
     backgroundColor: BLUE,
     color: "#fff",
     border: "none",
-    padding: "10px",
-    borderRadius: "6px",
+    padding: "0.625rem",
+    borderRadius: "0.375rem",
     cursor: "pointer",
     width: "100%",
     fontWeight: "600",
     fontSize: "1rem",
   },
-  footerText: {
+  footer: {
     marginTop: "1.5rem",
+  },
+  footerText: {
     textAlign: "center",
     fontSize: "0.9rem",
     color: "#888",

@@ -1,3 +1,17 @@
+/**
+ * AddTournament Component
+ *
+ * Form for creating a new trading tournament with date/time scheduling.
+ *
+ * Key behaviours:
+ * - Uses React state to manage tournament form fields
+ * - Provides rounded-to-15min default start time with 24h default duration
+ * - Validates start time is not in the past and end time is at least 1 min after start
+ * - Displays live duration calculation as user adjusts dates
+ * - Handles currency input with dollar prefix formatting
+ * - Submits to backend API with auth token, navigates to dashboard on success
+ */
+
 import { useContext, useState, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import { AuthContext } from "../context/AuthContext";
@@ -5,12 +19,14 @@ import Header from "../components/Header";
 import DatePicker from "../components/DatePicker";
 import TimePicker from "../components/TimePicker";
 
+// Returns current time rounded up to nearest 15 minutes in ISO format
 function getRoundedNow() {
   const now = new Date();
   const ms = 15 * 60 * 1000;
   return new Date(Math.ceil(now.getTime() / ms) * ms).toISOString().slice(0, 16);
 }
 
+// Adds specified hours to an ISO date string
 function addHours(dateStr, hours) {
   const d = new Date(dateStr);
   d.setHours(d.getHours() + hours);
@@ -22,6 +38,7 @@ function AddTournament() {
   const navigate = useNavigate();
   const now = getRoundedNow();
 
+  // Form state with sensible defaults
   const [formData, setFormData] = useState({
     name: "",
     start_date: now,
@@ -30,19 +47,19 @@ function AddTournament() {
     description: "",
   });
 
-  // Validation logic
+  // Memoized validation errors for start/end dates
   const validationErrors = useMemo(() => {
     const errors = {};
     const now = new Date();
     const start = new Date(formData.start_date);
     const end = new Date(formData.end_date);
     
-    // Check if start is in the past (with 1 minute buffer)
+    // Start must not be in the past (1 minute buffer)
     if (start < new Date(now.getTime() - 60000)) {
       errors.start_date = "Start time cannot be in the past";
     }
     
-    // Check if end is at least 1 minute after start
+    // End must be at least 1 minute after start
     const diffMs = end - start;
     if (diffMs < 60000) {
       errors.end_date = "End time must be at least 1 minute after start time";
@@ -53,10 +70,12 @@ function AddTournament() {
 
   const hasErrors = Object.keys(validationErrors).length > 0;
 
+  // Generic handler for text/number input changes
   function handleChange(e) {
     setFormData({ ...formData, [e.target.name]: e.target.value });
   }
 
+  // Calculates human-readable duration between start and end dates
   function getDuration() {
     const diff = new Date(formData.end_date) - new Date(formData.start_date);
     const mins = Math.floor(diff / 60000);
@@ -67,10 +86,10 @@ function AddTournament() {
     return `${h}h ${m}m`;
   }
 
+  // Submits tournament data to API after validation check
   async function handleSubmit(e) {
     e.preventDefault();
     
-    // Double-check validation before submitting
     if (hasErrors) {
       alert("Please fix validation errors before submitting");
       return;
@@ -103,14 +122,17 @@ function AddTournament() {
   return (
     <div style={styles.page}>
       <Header />
-      <div style={styles.container}>
-        <div style={styles.card}>
+      <main style={styles.main}>
+        <article style={styles.card}>
 
-          <h2 style={styles.title}>Create Tournament</h2>
+          <h1 style={styles.title}>Create Tournament</h1>
 
           <form onSubmit={handleSubmit} style={styles.form}>
-            <label style={styles.label}>Tournament Name</label>
+            
+            {/* Tournament Name Field */}
+            <label htmlFor="name" style={styles.label}>Tournament Name</label>
             <input
+              id="name"
               name="name"
               value={formData.name}
               onChange={handleChange}
@@ -120,51 +142,58 @@ function AddTournament() {
               autoFocus
             />
 
-            {/* Start Date & Time */}
-            <label style={styles.label}>Start Date & Time</label>
-            <div style={styles.dateTimeRow}>
-              <DatePicker 
-                name="start_date" 
-                value={formData.start_date} 
-                onChange={handleChange}
-              />
-              <TimePicker 
-                name="start_date" 
-                value={formData.start_date} 
-                onChange={handleChange}
-              />
-            </div>
+            {/* Start Date & Time Group */}
+            <fieldset style={styles.fieldset}>
+              <legend style={styles.legend}>Start Date & Time</legend>
+              <div style={styles.dateTimeGroup}>
+                <DatePicker 
+                  name="start_date" 
+                  value={formData.start_date} 
+                  onChange={handleChange}
+                />
+                <TimePicker 
+                  name="start_date" 
+                  value={formData.start_date} 
+                  onChange={handleChange}
+                />
+              </div>
+            </fieldset>
             {validationErrors.start_date && (
-              <span style={styles.errorText}>{validationErrors.start_date}</span>
+              <p role="alert" style={styles.error}>{validationErrors.start_date}</p>
             )}
 
-            {/* End Date & Time */}
-            <label style={styles.label}>End Date & Time</label>
-            <div style={styles.dateTimeRow}>
-              <DatePicker 
-                name="end_date" 
-                value={formData.end_date} 
-                onChange={handleChange}
-              />
-              <TimePicker 
-                name="end_date" 
-                value={formData.end_date} 
-                onChange={handleChange}
-              />
-            </div>
+            {/* End Date & Time Group */}
+            <fieldset style={styles.fieldset}>
+              <legend style={styles.legend}>End Date & Time</legend>
+              <div style={styles.dateTimeGroup}>
+                <DatePicker 
+                  name="end_date" 
+                  value={formData.end_date} 
+                  onChange={handleChange}
+                />
+                <TimePicker 
+                  name="end_date" 
+                  value={formData.end_date} 
+                  onChange={handleChange}
+                />
+              </div>
+            </fieldset>
             {validationErrors.end_date && (
-              <span style={styles.errorText}>{validationErrors.end_date}</span>
+              <p role="alert" style={styles.error}>{validationErrors.end_date}</p>
             )}
 
-            <div style={styles.durationBadge}>
+            {/* Live Duration Display */}
+            <div style={styles.duration}>
               <span style={styles.durationLabel}>Duration:</span>
-              <span style={styles.durationValue}>{getDuration()}</span>
+              <output style={styles.durationValue}>{getDuration()}</output>
             </div>
 
-            <label style={styles.label}>Player Starting Balance</label>
-            <div style={styles.inputWrapper}>
-              <span style={styles.prefix}>$</span>
+            {/* Starting Balance Field with Dollar Prefix */}
+            <label htmlFor="starting_balance" style={styles.label}>Player Starting Balance</label>
+            <div style={styles.currencyInput}>
+              <span style={styles.currencySymbol}>$</span>
               <input
+                id="starting_balance"
                 name="starting_balance"
                 type="number"
                 value={formData.starting_balance}
@@ -173,12 +202,14 @@ function AddTournament() {
                 required
                 min="0"
                 step="1000"
-                style={{ ...styles.input, paddingLeft: "28px" }}
+                style={styles.currencyField}
               />
             </div>
 
-            <label style={styles.label}>Game Description</label>
+            {/* Description Field */}
+            <label htmlFor="description" style={styles.label}>Game Description</label>
             <textarea
+              id="description"
               name="description"
               value={formData.description}
               onChange={handleChange}
@@ -187,24 +218,26 @@ function AddTournament() {
               style={styles.textarea}
             />
 
-            <div style={styles.btnRow}>
-              <button type="button" style={styles.cancelBtn} onClick={() => navigate("/dashboard")}>
+            {/* Action Buttons */}
+            <div style={styles.actions}>
+              <button type="button" style={styles.cancelButton} onClick={() => navigate("/dashboard")}>
                 Cancel
               </button>
               <button 
                 type="submit" 
                 style={{
-                  ...styles.submitBtn,
-                  ...(hasErrors ? styles.submitBtnDisabled : {}),
+                  ...styles.submitButton,
+                  ...(hasErrors ? styles.submitButtonDisabled : {}),
                 }}
                 disabled={hasErrors}
               >
                 Create Tournament
               </button>
             </div>
+            
           </form>
-        </div>
-      </div>
+        </article>
+      </main>
     </div>
   );
 }
@@ -214,27 +247,165 @@ const BG = "#1A1A1A";
 const TEXT = "#F9F9F9";
 
 const styles = {
-  page: { minHeight: "100vh", backgroundColor: BG, fontFamily: "'Segoe UI', sans-serif" },
-  container: { display: "flex", justifyContent: "center", padding: "40px 20px" },
-  card: { width: "100%", maxWidth: "600px", backgroundColor: "#2a2a2a", borderRadius: "16px", padding: "40px", boxShadow: "0 8px 32px rgba(0,0,0,0.4)", border: "1px solid #333" },
-  backBtn: { background: "none", border: "none", color: BLUE, fontWeight: "600", fontSize: "0.9rem", cursor: "pointer", padding: "8px 0", marginBottom: "24px", display: "block" },
-  title: { margin: "0 0 4px", color: TEXT, fontSize: "1.8rem", fontWeight: "700" },
-  subtitle: { margin: "0 0 28px", color: "#888", fontSize: "0.95rem" },
-  form: { display: "flex", flexDirection: "column", gap: "4px" },
-  label: { fontSize: "0.85rem", fontWeight: "600", color: "#aaa", marginTop: "16px", marginBottom: "8px", display: "block" },
-  input: { padding: "12px 16px", borderRadius: "8px", border: "1px solid #444", backgroundColor: "#1f1f1f", color: TEXT, fontSize: "1rem", outline: "none", width: "100%", boxSizing: "border-box" },
-  inputWrapper: { position: "relative" },
-  prefix: { position: "absolute", left: "14px", top: "50%", transform: "translateY(-50%)", color: "#666", fontWeight: "600", pointerEvents: "none" },
-  dateTimeRow: { display: "flex", gap: "12px", alignItems: "flex-start", marginBottom: "4px" },
-  durationBadge: { display: "flex", alignItems: "center", gap: "8px", backgroundColor: "#252525", padding: "10px 16px", borderRadius: "8px", marginTop: "8px", border: "1px solid #333" },
-  durationLabel: { color: "#888", fontSize: "0.85rem" },
-  durationValue: { color: "#00D084", fontWeight: "700", fontSize: "1rem" },
-  textarea: { padding: "12px 16px", borderRadius: "8px", border: "1px solid #444", backgroundColor: "#1f1f1f", color: TEXT, fontSize: "1rem", outline: "none", resize: "vertical", fontFamily: "'Segoe UI', sans-serif", minHeight: "100px" },
-  btnRow: { display: "flex", gap: "12px", marginTop: "24px" },
-  cancelBtn: { flex: 1, padding: "14px", backgroundColor: "transparent", color: "#888", border: "1px solid #444", borderRadius: "8px", fontSize: "1rem", fontWeight: "600", cursor: "pointer" },
-  submitBtn: { flex: 2, padding: "14px", backgroundColor: BLUE, color: "#fff", border: "none", borderRadius: "8px", fontSize: "1rem", fontWeight: "700", cursor: "pointer" },
-  submitBtnDisabled: { backgroundColor: "#555", cursor: "not-allowed", opacity: 0.6 },
-  errorText: { color: "#ff6b6b", fontSize: "0.8rem", marginTop: "4px", marginBottom: "8px" },
+  page: { 
+    minHeight: "100vh", 
+    backgroundColor: BG, 
+    fontFamily: "'Segoe UI', sans-serif" 
+  },
+  main: { 
+    display: "flex", 
+    justifyContent: "center", 
+    padding: "2.5rem 1.25rem" 
+  },
+  card: { 
+    width: "100%", 
+    maxWidth: "37.5rem", 
+    backgroundColor: "#2a2a2a", 
+    borderRadius: "1rem", 
+    padding: "2.5rem", 
+    boxShadow: "0 0.5rem 2rem rgba(0,0,0,0.4)", 
+    border: "1px solid #333" 
+  },
+  title: { 
+    margin: "0 0 0.25rem", 
+    color: TEXT, 
+    fontSize: "1.8rem", 
+    fontWeight: "700" 
+  },
+  form: { 
+    display: "flex", 
+    flexDirection: "column", 
+    gap: "0.25rem" 
+  },
+  fieldset: { 
+    border: "none", 
+    padding: 0, 
+    margin: "1rem 0 0 0" 
+  },
+  legend: { 
+    fontSize: "0.85rem", 
+    fontWeight: "600", 
+    color: "#aaa", 
+    marginBottom: "0.5rem",
+    padding: 0
+  },
+  label: { 
+    fontSize: "0.85rem", 
+    fontWeight: "600", 
+    color: "#aaa", 
+    marginTop: "1rem", 
+    marginBottom: "0.5rem", 
+    display: "block" 
+  },
+  input: { 
+    padding: "0.75rem 1rem", 
+    borderRadius: "0.5rem", 
+    border: "1px solid #444", 
+    backgroundColor: "#1f1f1f", 
+    color: TEXT, 
+    fontSize: "1rem", 
+    outline: "none", 
+    width: "100%", 
+    boxSizing: "border-box" 
+  },
+  currencyInput: { 
+    position: "relative" 
+  },
+  currencySymbol: { 
+    position: "absolute", 
+    left: "0.875rem", 
+    top: "50%", 
+    transform: "translateY(-50%)", 
+    color: "#666", 
+    fontWeight: "600", 
+    pointerEvents: "none" 
+  },
+  currencyField: { 
+    padding: "0.75rem 1rem", 
+    paddingLeft: "1.75rem", 
+    borderRadius: "0.5rem", 
+    border: "1px solid #444", 
+    backgroundColor: "#1f1f1f", 
+    color: TEXT, 
+    fontSize: "1rem", 
+    outline: "none", 
+    width: "100%", 
+    boxSizing: "border-box" 
+  },
+  dateTimeGroup: { 
+    display: "flex", 
+    gap: "0.75rem", 
+    alignItems: "flex-start" 
+  },
+  duration: { 
+    display: "flex", 
+    alignItems: "center", 
+    gap: "0.5rem", 
+    backgroundColor: "#252525", 
+    padding: "0.625rem 1rem", 
+    borderRadius: "0.5rem", 
+    marginTop: "0.5rem", 
+    border: "1px solid #333" 
+  },
+  durationLabel: { 
+    color: "#888", 
+    fontSize: "0.85rem" 
+  },
+  durationValue: { 
+    color: "#00D084", 
+    fontWeight: "700", 
+    fontSize: "1rem" 
+  },
+  textarea: { 
+    padding: "0.75rem 1rem", 
+    borderRadius: "0.5rem", 
+    border: "1px solid #444", 
+    backgroundColor: "#1f1f1f", 
+    color: TEXT, 
+    fontSize: "1rem", 
+    outline: "none", 
+    resize: "vertical", 
+    fontFamily: "'Segoe UI', sans-serif", 
+    minHeight: "6.25rem" 
+  },
+  actions: { 
+    display: "flex", 
+    gap: "0.75rem", 
+    marginTop: "1.5rem" 
+  },
+  cancelButton: { 
+    flex: 1, 
+    padding: "0.875rem", 
+    backgroundColor: "transparent", 
+    color: "#888", 
+    border: "1px solid #444", 
+    borderRadius: "0.5rem", 
+    fontSize: "1rem", 
+    fontWeight: "600", 
+    cursor: "pointer" 
+  },
+  submitButton: { 
+    flex: 2, 
+    padding: "0.875rem", 
+    backgroundColor: BLUE, 
+    color: "#fff", 
+    border: "none", 
+    borderRadius: "0.5rem", 
+    fontSize: "1rem", 
+    fontWeight: "700", 
+    cursor: "pointer" 
+  },
+  submitButtonDisabled: { 
+    backgroundColor: "#555", 
+    cursor: "not-allowed", 
+    opacity: 0.6 
+  },
+  error: { 
+    color: "#ff6b6b", 
+    fontSize: "0.8rem", 
+    marginTop: "0.25rem", 
+    marginBottom: "0.5rem" 
+  },
 };
 
 export default AddTournament;

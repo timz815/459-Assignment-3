@@ -1,3 +1,16 @@
+/**
+ * Tournament Model
+ *
+ * Mongoose schema representing a trading tournament with scheduling and status management.
+ *
+ * Key behaviours:
+ * - Owned by a user who has full control over the tournament
+ * - Scheduled with start and end dates for automatic status transitions
+ * - Tracks starting balance for all participants
+ * - Status enum controls tournament lifecycle (open → active → closed/ended)
+ * - Auto-generated timestamps for creation and updates
+ */
+
 const mongoose = require("mongoose");
 
 const TournamentSchema = new mongoose.Schema(
