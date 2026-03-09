@@ -15,7 +15,9 @@ function DatePicker({ name, value, onChange, placeholder = "Select date" }) {
 
   const dateValue = value ? value.split("T")[0] : "";
 
-  const initialDate = dateValue ? new Date(dateValue) : new Date();
+  const initialDate = dateValue 
+  ? new Date(...dateValue.split("-").map((v, i) => i === 1 ? Number(v) - 1 : Number(v)))
+  : new Date();
   const [currentMonth, setCurrentMonth] = useState(initialDate.getMonth());
   const [currentYear, setCurrentYear] = useState(initialDate.getFullYear());
 
@@ -63,7 +65,13 @@ function DatePicker({ name, value, onChange, placeholder = "Select date" }) {
 
   function selectDay(day) {
     if (!day) return;
-    const newDate = `${currentYear}-${String(currentMonth + 1).padStart(2, "0")}-${String(day).padStart(2, "0")}`;
+    // Create date in local time to avoid UTC shift issues
+    const newDateObj = new Date(currentYear, currentMonth, day);
+    const year = newDateObj.getFullYear();
+    const month = String(newDateObj.getMonth() + 1).padStart(2, "0");
+    const date = String(newDateObj.getDate()).padStart(2, "0");
+    const newDate = `${year}-${month}-${date}`;
+    
     const timePart = value && value.includes("T") ? value.split("T")[1] : "00:00";
     onChange({ target: { name, value: `${newDate}T${timePart}` } });
     setIsOpen(false);
@@ -72,7 +80,9 @@ function DatePicker({ name, value, onChange, placeholder = "Select date" }) {
   function isSelected(day) {
     if (!day || !dateValue) return false;
     const check = new Date(currentYear, currentMonth, day);
-    const selected = new Date(dateValue);
+    // Parse dateValue consistently (YYYY-MM-DD) to avoid UTC issues
+    const [y, m, d] = dateValue.split("-").map(Number);
+    const selected = new Date(y, m - 1, d);
     return check.toDateString() === selected.toDateString();
   }
 

@@ -17,24 +17,20 @@ function TournamentDetail() {
   useEffect(() => {
     async function fetchData() {
       try {
-        // fetch tournament
         const tRes = await fetch("http://localhost:5000/api/tournaments/" + id);
         const tData = await tRes.json();
         setTournament(tData);
 
-        // check if current user is owner
         if (user && tData.owner) {
           setIsOwner(tData.owner._id === user.id || tData.owner === user.id);
         }
 
-        // fetch participants
         const pRes = await fetch("http://localhost:5000/api/tournaments/" + id + "/participants");
         const pData = await pRes.json();
         setParticipants(Array.isArray(pData) ? pData : []);
 
-        // check if current user is already a participant
         if (user && Array.isArray(pData)) {
-          const already = pData.some((p) => p.user._id === user.id || p.user === user.id);
+          const already = pData.some((p) => p.user?._id === user.id || p.user === user.id);
           setIsParticipant(already);
         }
       } catch (err) {
@@ -49,15 +45,14 @@ function TournamentDetail() {
 
   async function handleJoin() {
     try {
-      const res = await fetch(`http://localhost:5000/api/tournaments/${id}/join`, {
+      const res = await fetch("http://localhost:5000/api/tournaments/" + id + "/join", {
         method: "POST",
         headers: { Authorization: token },
       });
       const data = await res.json();
       if (res.ok) {
         setIsParticipant(true);
-        // refresh participants
-        const pRes = await fetch(`http://localhost:5000/api/tournaments/${id}/participants`);
+        const pRes = await fetch("http://localhost:5000/api/tournaments/" + id + "/participants");
         const pData = await pRes.json();
         setParticipants(pData);
       } else {
@@ -70,14 +65,14 @@ function TournamentDetail() {
 
   async function handleLeave() {
     try {
-      const res = await fetch(`http://localhost:5000/api/tournaments/${id}/leave`, {
+      const res = await fetch("http://localhost:5000/api/tournaments/" + id + "/leave", {
         method: "DELETE",
         headers: { Authorization: token },
       });
       const data = await res.json();
       if (res.ok) {
         setIsParticipant(false);
-        const pRes = await fetch(`http://localhost:5000/api/tournaments/${id}/participants`);
+        const pRes = await fetch("http://localhost:5000/api/tournaments/" + id + "/participants");
         const pData = await pRes.json();
         setParticipants(pData);
       } else {
@@ -89,9 +84,8 @@ function TournamentDetail() {
   }
 
   async function handleClose() {
-    if (!window.confirm("Are you sure you want to close this tournament? No new players can join.")) return;
     try {
-      const res = await fetch(`http://localhost:5000/api/tournaments/${id}/close`, {
+      const res = await fetch("http://localhost:5000/api/tournaments/" + id + "/close", {
         method: "PATCH",
         headers: { Authorization: token },
       });
@@ -99,10 +93,28 @@ function TournamentDetail() {
       if (res.ok) {
         setTournament(data);
       } else {
-        alert(data.message || "Failed to close tournament");
+        alert(data.message || "Failed to update tournament status");
       }
     } catch (err) {
-      console.error("Close error:", err);
+      console.error("Close/Open error:", err);
+    }
+  }
+
+  async function handleDeleteTournament() {
+    if (!window.confirm("Are you sure you want to delete this tournament? This cannot be undone.")) return;
+    try {
+      const res = await fetch("http://localhost:5000/api/tournaments/" + id, {
+        method: "DELETE",
+        headers: { Authorization: token },
+      });
+      if (res.ok) {
+        navigate("/tournaments");
+      } else {
+        const data = await res.json();
+        alert(data.message || "Failed to delete tournament");
+      }
+    } catch (err) {
+      console.error("Delete tournament error:", err);
     }
   }
 
@@ -142,12 +154,10 @@ function TournamentDetail() {
       <Header />
 
       <div style={styles.content}>
-        {/* Back */}
         <button style={styles.backBtn} onClick={() => navigate("/tournaments")}>
           ← Back to Tournaments
         </button>
 
-        {/* Tournament Header */}
         <div style={styles.tournamentHeader}>
           <div style={styles.titleRow}>
             <h1 style={styles.title}>{tournament.name}</h1>
@@ -157,15 +167,15 @@ function TournamentDetail() {
           </div>
 
           <div style={styles.metaRow}>
-            <span style={styles.meta}>📅 {tournament.start_date?.slice(0, 10)} → {tournament.end_date?.slice(0, 10)}</span>
+            <span style={styles.meta}>{tournament.start_date?.slice(0, 10)} → {tournament.end_date?.slice(0, 10)}</span>
             <span style={styles.metaDivider}>·</span>
-            <span style={styles.meta}>💰 ${tournament.starting_balance} starting balance</span>
+            <span style={styles.meta}>${tournament.starting_balance} starting balance</span>
             <span style={styles.metaDivider}>·</span>
-            <span style={styles.meta}>👥 {participants.length} participants</span>
+            <span style={styles.meta}>{participants.length} participants</span>
             {tournament.owner?.username && (
               <>
                 <span style={styles.metaDivider}>·</span>
-                <span style={styles.meta}>🏆 Hosted by {tournament.owner.username}</span>
+                <span style={styles.meta}>Hosted by {tournament.owner.username}</span>
               </>
             )}
           </div>
@@ -175,33 +185,29 @@ function TournamentDetail() {
           )}
         </div>
 
-        {/* Participation Status */}
         <div style={styles.statusCard}>
           {!token ? (
             <div style={styles.statusRow}>
-              <div>
-                <p style={styles.statusMsg}>Login to join this tournament.</p>
-              </div>
+              <p style={styles.statusMsg}>Login to join this tournament.</p>
               <button style={styles.joinBtn} onClick={() => navigate("/login")}>
                 Login to Join
               </button>
             </div>
           ) : isOwner ? (
             <div style={styles.statusRow}>
-              <div>
-                <p style={styles.statusMsgBlue}>You created this tournament.</p>
-              </div>
-              {(tournament.status === "open" || tournament.status === "active") && (
+              <p style={styles.statusMsgBlue}>You created this tournament.</p>
+              <div style={{ display: "flex", gap: "12px" }}>
                 <button style={styles.closeBtn} onClick={handleClose}>
-                  Close Tournament
+                  {tournament.status === "closed" ? "Open Joining" : "Close Joining"}
                 </button>
-              )}
+                <button style={styles.deleteBtn} onClick={handleDeleteTournament}>
+                  Delete Tournament
+                </button>
+              </div>
             </div>
           ) : isParticipant ? (
             <div style={styles.statusRow}>
-              <div>
-                <p style={styles.statusMsgGreen}>✓ You are participating in this tournament.</p>
-              </div>
+              <p style={styles.statusMsgGreen}>✓ You are participating in this tournament.</p>
               {canJoin && (
                 <button style={styles.leaveBtn} onClick={handleLeave}>
                   Leave Tournament
@@ -210,9 +216,7 @@ function TournamentDetail() {
             </div>
           ) : (
             <div style={styles.statusRow}>
-              <div>
-                <p style={styles.statusMsg}>You are not part of this tournament.</p>
-              </div>
+              <p style={styles.statusMsg}>You are not part of this tournament.</p>
               {canJoin ? (
                 <button style={styles.joinBtn} onClick={handleJoin}>
                   Join Tournament
@@ -224,7 +228,6 @@ function TournamentDetail() {
           )}
         </div>
 
-        {/* Participants */}
         <div style={styles.section}>
           <h2 style={styles.sectionTitle}>
             Participants
@@ -262,10 +265,7 @@ const styles = {
   page: { minHeight: "100vh", backgroundColor: BG, color: TEXT, fontFamily: "'Segoe UI', sans-serif" },
   content: { maxWidth: "1250px", margin: "0 auto", padding: "40px 20px 80px" },
   loading: { textAlign: "center", padding: "80px", color: "#888" },
-
   backBtn: { background: "none", border: "none", color: BLUE, fontWeight: "600", fontSize: "0.9rem", cursor: "pointer", padding: "0 0 24px 0", display: "block" },
-
-  // Tournament header
   tournamentHeader: { marginBottom: "24px" },
   titleRow: { display: "flex", alignItems: "center", gap: "16px", marginBottom: "12px", flexWrap: "wrap" },
   title: { margin: 0, fontSize: "2rem", fontWeight: "700", color: TEXT },
@@ -274,20 +274,16 @@ const styles = {
   meta: { fontSize: "0.9rem", color: "#aaa" },
   metaDivider: { color: "#444" },
   description: { color: "#888", fontSize: "0.95rem", marginTop: "12px", lineHeight: 1.6 },
-
-  // Status card
   statusCard: { backgroundColor: "#2a2a2a", border: "1px solid #3a3a3a", borderRadius: "10px", padding: "20px 24px", marginBottom: "32px" },
   statusRow: { display: "flex", justifyContent: "space-between", alignItems: "center", gap: "20px" },
   statusMsg: { margin: 0, color: "#888", fontSize: "0.95rem" },
   statusMsgGreen: { margin: 0, color: "#4caf50", fontSize: "0.95rem", fontWeight: "600" },
   statusMsgBlue: { margin: 0, color: BLUE, fontSize: "0.95rem", fontWeight: "600" },
-
   joinBtn: { padding: "10px 24px", backgroundColor: BLUE, color: "#fff", border: "none", borderRadius: "6px", fontWeight: "600", fontSize: "0.95rem", cursor: "pointer", whiteSpace: "nowrap" },
   leaveBtn: { padding: "10px 24px", backgroundColor: "transparent", color: "#ff6b6b", border: "1px solid #ff6b6b", borderRadius: "6px", fontWeight: "600", fontSize: "0.95rem", cursor: "pointer", whiteSpace: "nowrap" },
   closeBtn: { padding: "10px 24px", backgroundColor: "transparent", color: "#ffaa55", border: "1px solid #ffaa55", borderRadius: "6px", fontWeight: "600", fontSize: "0.95rem", cursor: "pointer", whiteSpace: "nowrap" },
+  deleteBtn: { padding: "10px 24px", backgroundColor: "transparent", color: "#ff6b6b", border: "1px solid #ff6b6b", borderRadius: "6px", fontWeight: "600", fontSize: "0.95rem", cursor: "pointer", whiteSpace: "nowrap" },
   closedMsg: { color: "#666", fontSize: "0.9rem", fontStyle: "italic" },
-
-  // Participants
   section: {},
   sectionTitle: { fontSize: "1.2rem", fontWeight: "600", color: TEXT, marginBottom: "16px", paddingBottom: "12px", borderBottom: "1px solid #3a3a3a" },
   sectionCount: { color: "#888", fontWeight: "400", fontSize: "1rem" },

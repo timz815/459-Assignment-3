@@ -60,7 +60,7 @@ function Tournaments() {
         <div style={styles.searchWrapper}>
           <input
             type="text"
-            placeholder="Search tournaments…"
+            placeholder="Search tournaments..."
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
             style={styles.searchInput}
@@ -87,9 +87,9 @@ function Tournaments() {
                   <div style={styles.cardLeft}>
                     <h3 style={styles.cardName}>{t.name}</h3>
                     <div style={styles.cardStats}>
-                      <span style={styles.stat}>📅 {t.start_date?.slice(0, 10)} → {t.end_date?.slice(0, 10)}</span>
+                      <span style={styles.stat}>{t.start_date?.slice(0, 10)} → {t.end_date?.slice(0, 10)}</span>
                       <span style={styles.statDivider}>·</span>
-                      <span style={styles.stat}>💰 ${t.starting_balance} starting balance</span>
+                      <span style={styles.stat}>${t.starting_balance} starting balance</span>
                     </div>
                     {t.description && <p style={styles.description}>{t.description}</p>}
                   </div>

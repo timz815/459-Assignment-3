@@ -50,13 +50,35 @@ router.get("/:id/participants", async (req, res) => {
 // ── POST create a new tournament ─────────────────────────────────────────────
 router.post("/", verifyToken, async (req, res) => {
   try {
+    const { start_date, end_date, name, starting_balance, description } = req.body;
+    
+    // Validate required fields
+    if (!name || !start_date || !end_date || starting_balance === undefined) {
+      return res.status(400).json({ message: "Missing required fields" });
+    }
+    
+    const now = new Date();
+    const start = new Date(start_date);
+    const end = new Date(end_date);
+    
+    // Check if start is in the past
+    if (start < now) {
+      return res.status(400).json({ message: "Start time cannot be in the past" });
+    }
+    
+    // Check if end is at least 1 minute after start
+    const diffMs = end - start;
+    if (diffMs < 60000) {
+      return res.status(400).json({ message: "End time must be at least 1 minute after start time" });
+    }
+    
     const tournament = new Tournament({
       owner: req.userId,
-      name: req.body.name,
-      start_date: req.body.start_date,
-      end_date: req.body.end_date,
-      starting_balance: req.body.starting_balance,
-      description: req.body.description,
+      name,
+      start_date: start,
+      end_date: end,
+      starting_balance,
+      description,
     });
     await tournament.save();
 
@@ -82,11 +104,9 @@ router.post("/:id/join", verifyToken, async (req, res) => {
     if (!tournament)
       return res.status(404).json({ message: "Tournament not found" });
 
-    // only open or active tournaments can be joined
     if (tournament.status === "closed" || tournament.status === "ended")
       return res.status(403).json({ message: "This tournament is no longer accepting players." });
 
-    // check if already joined
     const existing = await Participant.findOne({
       tournament: req.params.id,
       user: req.userId,
@@ -94,7 +114,6 @@ router.post("/:id/join", verifyToken, async (req, res) => {
     if (existing)
       return res.status(400).json({ message: "You have already joined this tournament." });
 
-    // create participant with starting balance
     const participant = new Participant({
       tournament: req.params.id,
       user: req.userId,
@@ -125,7 +144,7 @@ router.delete("/:id/leave", verifyToken, async (req, res) => {
   }
 });
 
-// ── PATCH close a tournament (owner only) ────────────────────────────────────
+// ── PATCH close/reopen a tournament (owner only) ─────────────────────────────
 router.patch("/:id/close", verifyToken, async (req, res) => {
   try {
     const tournament = await Tournament.findById(req.params.id);
@@ -136,7 +155,8 @@ router.patch("/:id/close", verifyToken, async (req, res) => {
     if (tournament.owner.toString() !== req.userId)
       return res.status(403).json({ message: "Only the owner can close this tournament." });
 
-    tournament.status = "closed";
+    // toggle between open and closed
+    tournament.status = tournament.status === "closed" ? "open" : "closed";
     await tournament.save();
 
     res.json(tournament);
@@ -156,7 +176,6 @@ router.delete("/:id", verifyToken, async (req, res) => {
     if (tournament.owner.toString() !== req.userId)
       return res.status(403).json({ message: "Forbidden: You do not own this tournament." });
 
-    // also delete all participants
     await Participant.deleteMany({ tournament: req.params.id });
     await Tournament.findByIdAndDelete(req.params.id);
 

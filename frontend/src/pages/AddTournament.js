@@ -1,5 +1,4 @@
-// AddTournament.jsx - COMPLETE FILE
-import { useContext, useState } from "react";
+import { useContext, useState, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import { AuthContext } from "../context/AuthContext";
 import Header from "../components/Header";
@@ -31,6 +30,29 @@ function AddTournament() {
     description: "",
   });
 
+  // Validation logic
+  const validationErrors = useMemo(() => {
+    const errors = {};
+    const now = new Date();
+    const start = new Date(formData.start_date);
+    const end = new Date(formData.end_date);
+    
+    // Check if start is in the past (with 1 minute buffer)
+    if (start < new Date(now.getTime() - 60000)) {
+      errors.start_date = "Start time cannot be in the past";
+    }
+    
+    // Check if end is at least 1 minute after start
+    const diffMs = end - start;
+    if (diffMs < 60000) {
+      errors.end_date = "End time must be at least 1 minute after start time";
+    }
+    
+    return errors;
+  }, [formData.start_date, formData.end_date]);
+
+  const hasErrors = Object.keys(validationErrors).length > 0;
+
   function handleChange(e) {
     setFormData({ ...formData, [e.target.name]: e.target.value });
   }
@@ -47,6 +69,13 @@ function AddTournament() {
 
   async function handleSubmit(e) {
     e.preventDefault();
+    
+    // Double-check validation before submitting
+    if (hasErrors) {
+      alert("Please fix validation errors before submitting");
+      return;
+    }
+    
     try {
       const res = await fetch("http://localhost:5000/api/tournaments", {
         method: "POST",
@@ -105,6 +134,9 @@ function AddTournament() {
                 onChange={handleChange}
               />
             </div>
+            {validationErrors.start_date && (
+              <span style={styles.errorText}>{validationErrors.start_date}</span>
+            )}
 
             {/* End Date & Time */}
             <label style={styles.label}>End Date & Time</label>
@@ -120,6 +152,9 @@ function AddTournament() {
                 onChange={handleChange}
               />
             </div>
+            {validationErrors.end_date && (
+              <span style={styles.errorText}>{validationErrors.end_date}</span>
+            )}
 
             <div style={styles.durationBadge}>
               <span style={styles.durationLabel}>Duration:</span>
@@ -156,7 +191,14 @@ function AddTournament() {
               <button type="button" style={styles.cancelBtn} onClick={() => navigate("/dashboard")}>
                 Cancel
               </button>
-              <button type="submit" style={styles.submitBtn}>
+              <button 
+                type="submit" 
+                style={{
+                  ...styles.submitBtn,
+                  ...(hasErrors ? styles.submitBtnDisabled : {}),
+                }}
+                disabled={hasErrors}
+              >
                 Create Tournament
               </button>
             </div>
@@ -183,7 +225,7 @@ const styles = {
   input: { padding: "12px 16px", borderRadius: "8px", border: "1px solid #444", backgroundColor: "#1f1f1f", color: TEXT, fontSize: "1rem", outline: "none", width: "100%", boxSizing: "border-box" },
   inputWrapper: { position: "relative" },
   prefix: { position: "absolute", left: "14px", top: "50%", transform: "translateY(-50%)", color: "#666", fontWeight: "600", pointerEvents: "none" },
-  dateTimeRow: { display: "flex", gap: "12px", alignItems: "flex-start", marginBottom: "8px" },
+  dateTimeRow: { display: "flex", gap: "12px", alignItems: "flex-start", marginBottom: "4px" },
   durationBadge: { display: "flex", alignItems: "center", gap: "8px", backgroundColor: "#252525", padding: "10px 16px", borderRadius: "8px", marginTop: "8px", border: "1px solid #333" },
   durationLabel: { color: "#888", fontSize: "0.85rem" },
   durationValue: { color: "#00D084", fontWeight: "700", fontSize: "1rem" },
@@ -191,6 +233,8 @@ const styles = {
   btnRow: { display: "flex", gap: "12px", marginTop: "24px" },
   cancelBtn: { flex: 1, padding: "14px", backgroundColor: "transparent", color: "#888", border: "1px solid #444", borderRadius: "8px", fontSize: "1rem", fontWeight: "600", cursor: "pointer" },
   submitBtn: { flex: 2, padding: "14px", backgroundColor: BLUE, color: "#fff", border: "none", borderRadius: "8px", fontSize: "1rem", fontWeight: "700", cursor: "pointer" },
+  submitBtnDisabled: { backgroundColor: "#555", cursor: "not-allowed", opacity: 0.6 },
+  errorText: { color: "#ff6b6b", fontSize: "0.8rem", marginTop: "4px", marginBottom: "8px" },
 };
 
 export default AddTournament;

@@ -81,7 +81,11 @@ function Dashboard() {
         <div style={styles.list}>
           {tournaments.length > 0 ? (
             tournaments.map((t) => (
-              <div key={t._id} style={styles.card}>
+              <div 
+                key={t._id} 
+                style={{ ...styles.card, cursor: "pointer" }}
+                onClick={() => navigate(`/tournaments/${t._id}`)}
+              >
                 <div style={styles.cardLeft}>
                   <h3 style={styles.cardName}>{t.name}</h3>
 
@@ -105,7 +109,10 @@ function Dashboard() {
                 <div style={styles.cardRight}>
                   <button
                     style={styles.deleteBtn}
-                    onClick={() => handleDelete(t._id)}
+                    onClick={(e) => {
+                      e.stopPropagation(); // Prevent card click when clicking delete
+                      handleDelete(t._id);
+                    }}
                   >
                     Delete
                   </button>
