@@ -1,34 +1,8 @@
-import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import Header from "../components/Header";
 
 function Home() {
-  const [tournaments, setTournaments] = useState([]);
-  const [searchTerm, setSearchTerm] = useState("");
   const navigate = useNavigate();
-
-  useEffect(() => {
-    fetch("http://localhost:5000/api/tournaments")
-      .then((res) => res.json())
-      .then((data) => {
-        if (Array.isArray(data)) setTournaments(data);
-      })
-      .catch((err) => console.error("Error fetching tournaments:", err));
-  }, []);
-
-  const filtered = tournaments.filter((t) =>
-    t.name.toLowerCase().includes(searchTerm.toLowerCase())
-  );
-
-  function getStatusStyle(status) {
-    switch (status) {
-      case "open":     return { bg: "#0a3a4a", color: "#0F9FEA" };
-      case "active":   return { bg: "#0a3a1a", color: "#4caf50" };
-      case "closed":   return { bg: "#3a1a1a", color: "#ff6b6b" };
-      case "ended":    return { bg: "#2a2a2a", color: "#888" };
-      default:         return { bg: "#2a2a2a", color: "#888" };
-    }
-  }
 
   return (
     <div style={styles.page}>
@@ -37,67 +11,14 @@ function Home() {
       {/* Hero */}
       <section style={styles.hero}>
         <div style={styles.heroInner}>
-          <h1 style={styles.heroTitle}>Think You Can Beat the Market?</h1>
-          <h1 style={styles.heroTitle}>Enter a Trading Tournament!</h1>
+          <h1 style={styles.heroTitle}>Test Your Trading Skills in Stock Market Simulator Tournaments</h1>
 
-          <div style={styles.searchWrapper}>
-            <input
-              type="text"
-              placeholder="Search tournaments…"
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              style={styles.searchInput}
-            />
-            <span style={styles.searchIcon}>
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#888" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                <circle cx="11" cy="11" r="8" />
-                <line x1="21" y1="21" x2="16.65" y2="16.65" />
-              </svg>
-            </span>
-          </div>
-        </div>
-      </section>
-
-      {/* Tournaments */}
-      <section style={styles.section}>
-        <h2 style={styles.sectionTitle}>Current Tournaments</h2>
-
-        <div style={styles.list}>
-          {filtered.length > 0 ? (
-            filtered.map((t) => {
-              const { bg, color } = getStatusStyle(t.status);
-              return (
-                <div key={t._id} style={styles.card}>
-                  <div style={styles.cardLeft}>
-                    <h3 style={styles.cardName}>{t.name}</h3>
-                    <div style={styles.cardStats}>
-                      <span style={styles.stat}>📅 {t.start_date?.slice(0, 10)} → {t.end_date?.slice(0, 10)}</span>
-                      <span style={styles.statDivider}>·</span>
-                      <span style={styles.stat}>💰 ${t.starting_balance} starting balance</span>
-                    </div>
-                    {t.description && <p style={styles.description}>{t.description}</p>}
-                  </div>
-                  <div style={styles.cardRight}>
-                    <span style={{ ...styles.badge, backgroundColor: bg, color }}>
-                      {t.status}
-                    </span>
-                    {(t.status === "open" || t.status === "active") && (
-                      <button
-                        style={styles.joinBtn}
-                        onClick={() => navigate("/tournaments")}
-                      >
-                        Join
-                      </button>
-                    )}
-                  </div>
-                </div>
-              );
-            })
-          ) : (
-            <div style={styles.empty}>
-              <p>No tournaments found. Be the first to create one!</p>
-            </div>
-          )}
+          <button
+            style={styles.ctaButton}
+            onClick={() => navigate("/tournaments")}
+          >
+            View Tournaments
+          </button>
         </div>
       </section>
     </div>
@@ -115,132 +36,42 @@ const styles = {
     color: TEXT,
     fontFamily: "'Segoe UI', sans-serif",
   },
+
   hero: {
     backgroundColor: BG,
-    padding: "80px 20px",
-    borderBottom: "1px solid #3a3a3a",
+    padding: "120px 20px",
   },
+
   heroInner: {
-    maxWidth: "1250px",
+    maxWidth: "900px",
     margin: "0 auto",
-    textAlign: "left",
   },
+
   heroTitle: {
-    fontSize: "2.4rem",
+    fontSize: "2.6rem",
     fontWeight: "700",
     color: TEXT,
     margin: "0 0 8px",
     lineHeight: 1.2,
   },
-  searchWrapper: {
-    position: "relative",
-    marginTop: "32px",
-    maxWidth: "500px",
-  },
-  searchInput: {
-    width: "100%",
-    padding: "12px 44px 12px 18px",
-    borderRadius: "8px",
-    border: "none",
-    backgroundColor: "#333333",
-    color: TEXT,
-    fontSize: "1rem",
-    outline: "none",
-    boxSizing: "border-box",
-  },
-  searchIcon: {
-    position: "absolute",
-    right: "14px",
-    top: "50%",
-    transform: "translateY(-50%)",
-    display: "flex",
-    alignItems: "center",
-    pointerEvents: "none",
-  },
-  section: {
-    maxWidth: "1250px",
-    margin: "0 auto",
-    padding: "50px 20px 80px",
-  },
-  sectionTitle: {
-    fontSize: "1.2rem",
-    fontWeight: "600",
-    color: TEXT,
-    marginBottom: "20px",
-    paddingBottom: "12px",
-    borderBottom: "1px solid #3a3a3a",
-  },
-  list: {
-    display: "flex",
-    flexDirection: "column",
-    gap: "12px",
-  },
-  card: {
-    backgroundColor: "#333333",
-    borderRadius: "10px",
-    padding: "20px 24px",
-    display: "flex",
-    justifyContent: "space-between",
-    alignItems: "center",
-    gap: "20px",
-  },
-  cardLeft: {
-    display: "flex",
-    flexDirection: "column",
-    gap: "6px",
-  },
-  cardName: {
-    margin: 0,
-    fontSize: "1rem",
-    color: TEXT,
-    fontWeight: "600",
-  },
-  cardStats: {
-    display: "flex",
-    alignItems: "center",
-    gap: "8px",
-    flexWrap: "wrap",
-  },
-  stat: {
-    fontSize: "0.85rem",
+
+  heroText: {
+    marginTop: "20px",
     color: "#aaa",
+    fontSize: "1rem",
+    maxWidth: "600px",
   },
-  statDivider: {
-    color: "#555",
-  },
-  description: {
-    margin: "4px 0 0",
-    fontSize: "0.85rem",
-    color: "#777",
-  },
-  cardRight: {
-    display: "flex",
-    alignItems: "center",
-    gap: "12px",
-    flexShrink: 0,
-  },
-  badge: {
-    padding: "4px 12px",
-    borderRadius: "20px",
-    fontSize: "0.75rem",
-    fontWeight: "600",
-    whiteSpace: "nowrap",
-  },
-  joinBtn: {
-    padding: "8px 20px",
+
+  ctaButton: {
+    marginTop: "40px",
+    padding: "12px 28px",
     backgroundColor: BLUE,
     color: "#fff",
     border: "none",
-    borderRadius: "6px",
+    borderRadius: "8px",
+    fontSize: "1rem",
     fontWeight: "600",
-    fontSize: "0.9rem",
     cursor: "pointer",
-    whiteSpace: "nowrap",
-  },
-  empty: {
-    textAlign: "center",
-    padding: "60px 40px",
-    color: "#666",
   },
 };
 

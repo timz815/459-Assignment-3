@@ -18,7 +18,7 @@ function TournamentDetail() {
     async function fetchData() {
       try {
         // fetch tournament
-        const tRes = await fetch(`http://localhost:5000/api/tournaments/${id}`);
+        const tRes = await fetch("http://localhost:5000/api/tournaments/" + id);
         const tData = await tRes.json();
         setTournament(tData);
 
@@ -28,7 +28,7 @@ function TournamentDetail() {
         }
 
         // fetch participants
-        const pRes = await fetch(`http://localhost:5000/api/tournaments/${id}/participants`);
+        const pRes = await fetch("http://localhost:5000/api/tournaments/" + id + "/participants");
         const pData = await pRes.json();
         setParticipants(Array.isArray(pData) ? pData : []);
 

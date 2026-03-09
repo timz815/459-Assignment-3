@@ -51,7 +51,7 @@ function Tournaments() {
               style={styles.createBtn}
               onClick={() => navigate("/add-tournament")}
             >
-              + Create Tournament
+              Create Tournament
             </button>
           )}
         </div>
@@ -113,14 +113,6 @@ function Tournaments() {
           ) : (
             <div style={styles.empty}>
               <p>No tournaments found.</p>
-              {token && (
-                <button
-                  style={styles.createBtn}
-                  onClick={() => navigate("/add-tournament")}
-                >
-                  + Create the first one
-                </button>
-              )}
             </div>
           )}
         </div>

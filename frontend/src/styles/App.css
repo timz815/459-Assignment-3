@@ -1,8 +1,14 @@
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
 body,
 html {
   margin: 0;
   padding: 0;
-  background-color: #e8f5e9;
+  background-color: #1a1a1a;
   font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
   height: 100%;
 }
@@ -11,8 +17,6 @@ html {
   max-width: none;
 
   margin: 0;
-
-  padding: 20px;
 }
 
 .main-header {

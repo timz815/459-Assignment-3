@@ -40,7 +40,7 @@ router.get("/:id/participants", async (req, res) => {
   try {
     const participants = await Participant.find({ tournament: req.params.id })
       .populate("user", "username")
-      .sort({ cash_balance: -1 }); // sorted by balance for leaderboard
+      .sort({ cash_balance: -1 });
     res.json(participants);
   } catch (err) {
     res.status(500).json({ error: err.message });
@@ -59,6 +59,15 @@ router.post("/", verifyToken, async (req, res) => {
       description: req.body.description,
     });
     await tournament.save();
+
+    // automatically add the creator as a participant
+    const participant = new Participant({
+      tournament: tournament._id,
+      user: req.userId,
+      cash_balance: tournament.starting_balance,
+    });
+    await participant.save();
+
     res.status(201).json(tournament);
   } catch (err) {
     res.status(400).json({ error: err.message });

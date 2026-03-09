@@ -76,15 +76,11 @@ function AddTournament() {
       <Header />
       <div style={styles.container}>
         <div style={styles.card}>
-          <button style={styles.backBtn} onClick={() => navigate("/dashboard")}>
-            ← Back to Dashboard
-          </button>
 
           <h2 style={styles.title}>Create Tournament</h2>
-          <p style={styles.subtitle}>Set up a new trading tournament</p>
 
           <form onSubmit={handleSubmit} style={styles.form}>
-            <label style={styles.label}>Tournament Name *</label>
+            <label style={styles.label}>Tournament Name</label>
             <input
               name="name"
               value={formData.name}
@@ -96,7 +92,7 @@ function AddTournament() {
             />
 
             {/* Start Date & Time */}
-            <label style={styles.label}>Start Date & Time *</label>
+            <label style={styles.label}>Start Date & Time</label>
             <div style={styles.dateTimeRow}>
               <DatePicker 
                 name="start_date" 
@@ -111,7 +107,7 @@ function AddTournament() {
             </div>
 
             {/* End Date & Time */}
-            <label style={styles.label}>End Date & Time *</label>
+            <label style={styles.label}>End Date & Time</label>
             <div style={styles.dateTimeRow}>
               <DatePicker 
                 name="end_date" 
@@ -130,7 +126,7 @@ function AddTournament() {
               <span style={styles.durationValue}>{getDuration()}</span>
             </div>
 
-            <label style={styles.label}>Player Starting Balance *</label>
+            <label style={styles.label}>Player Starting Balance</label>
             <div style={styles.inputWrapper}>
               <span style={styles.prefix}>$</span>
               <input
