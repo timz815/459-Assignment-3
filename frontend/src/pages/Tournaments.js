@@ -32,6 +32,12 @@ function Tournaments() {
     }
   }
 
+  function getJoinLabel(t) {
+    if (!token) return "Login to Join";
+    if (t.status === "open" || t.status === "active") return "Join";
+    return "View";
+  }
+
   return (
     <div style={styles.page}>
       <Header />
@@ -73,7 +79,11 @@ function Tournaments() {
             filtered.map((t) => {
               const { bg, color } = getStatusStyle(t.status);
               return (
-                <div key={t._id} style={styles.card}>
+                <div
+                  key={t._id}
+                  style={{ ...styles.card, cursor: "pointer" }}
+                  onClick={() => navigate(`/tournaments/${t._id}`)}
+                >
                   <div style={styles.cardLeft}>
                     <h3 style={styles.cardName}>{t.name}</h3>
                     <div style={styles.cardStats}>
@@ -87,19 +97,15 @@ function Tournaments() {
                     <span style={{ ...styles.badge, backgroundColor: bg, color }}>
                       {t.status}
                     </span>
-                    {token && (t.status === "open" || t.status === "active") && (
-                      <button style={styles.joinBtn}>
-                        Join
-                      </button>
-                    )}
-                    {!token && (
-                      <button
-                        style={styles.joinBtn}
-                        onClick={() => navigate("/login")}
-                      >
-                        Login to Join
-                      </button>
-                    )}
+                    <button
+                      style={styles.joinBtn}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        navigate(`/tournaments/${t._id}`);
+                      }}
+                    >
+                      {getJoinLabel(t)}
+                    </button>
                   </div>
                 </div>
               );

@@ -7,6 +7,7 @@ import Dashboard from "./pages/Dashboard";
 import AddTournament from "./pages/AddTournament";
 import ProtectedRoute from "./routes/ProtectedRoute";
 import Tournaments from "./pages/Tournaments";
+import TournamentDetail from "./pages/TournamentDetail";
 
 function App() {
   return (
@@ -18,7 +19,7 @@ function App() {
           <Route path="/login" element={<Login />} />
           <Route path="/register" element={<Register />} />
           <Route path="/tournaments" element={<Tournaments />} />
-
+          <Route path="/tournaments/:id" element={<TournamentDetail />} />
 
           {/* protected routes - ProtectedRoute bounces unauthenticated users to /login */}
           <Route
