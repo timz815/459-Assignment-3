@@ -8,7 +8,6 @@ function Header() {
   const dropdownRef = useRef(null);
   const navigate = useNavigate();
 
-  // close dropdown if user clicks outside
   useEffect(() => {
     function handleClickOutside(e) {
       if (dropdownRef.current && !dropdownRef.current.contains(e.target)) {
@@ -27,67 +26,108 @@ function Header() {
 
   return (
     <header style={styles.header}>
-      <Link to={token ? "/dashboard" : "/"} style={styles.logo}>
-        🌿 PlantCollection
-      </Link>
+      <div style={styles.headerContent}>
+        {/* Left — Logo */}
+        <Link to="/" style={styles.logo}>
+          PaperTrader Arena
+        </Link>
 
-      <nav style={styles.nav}>
-        {token ? (
-          /* ── logged in: show My Account dropdown ── */
-          <div style={styles.dropdownWrapper} ref={dropdownRef}>
-            <button
-              style={styles.accountBtn}
-              onClick={() => setDropdownOpen(!dropdownOpen)}
-            >
-              👤 {user?.username}
-              <span style={styles.caret}>{dropdownOpen ? "▲" : "▼"}</span>
-            </button>
+        {/* Center — Nav */}
+        <nav style={styles.centerNav}>
+          <Link
+            to="/tournaments"
+            style={styles.navLink}
+            onMouseEnter={e => e.target.style.backgroundColor = "#333333"}
+            onMouseLeave={e => e.target.style.backgroundColor = "transparent"}
+          >
+            Tournaments
+          </Link>
+        </nav>
 
-            {dropdownOpen && (
-              <div style={styles.dropdown}>
-                <button onClick={handleLogout} style={styles.dropdownItem}>
-                  🚪 Logout
-                </button>
-              </div>
-            )}
-          </div>
-        ) : (
-          /* ── logged out: show Login + Sign Up ── */
-          <>
-            <Link to="/login" style={styles.outline}>Login</Link>
-            <Link to="/register" style={styles.filled}>Sign Up</Link>
-          </>
-        )}
-      </nav>
+        {/* Right — Auth */}
+        <nav style={styles.rightNav}>
+          {token ? (
+            <div style={styles.dropdownWrapper} ref={dropdownRef}>
+              <button
+                style={styles.accountBtn}
+                onClick={() => setDropdownOpen(!dropdownOpen)}
+              >
+                {user?.username}
+                <span style={styles.caret}>{dropdownOpen ? "▲" : "▼"}</span>
+              </button>
+
+              {dropdownOpen && (
+                <div style={styles.dropdown}>
+                  <button
+                    onClick={() => { navigate("/dashboard"); setDropdownOpen(false); }}
+                    style={styles.dropdownItem}
+                  >
+                    Account
+                  </button>
+                  <div style={styles.dropdownDivider} />
+                  <button onClick={handleLogout} style={styles.dropdownItemRed}>
+                    Logout
+                  </button>
+                </div>
+              )}
+            </div>
+          ) : (
+            <>
+              <Link to="/login" style={styles.outline}>Login</Link>
+              <Link to="/register" style={styles.filled}>Sign Up</Link>
+            </>
+          )}
+        </nav>
+      </div>
     </header>
   );
 }
 
-const GREEN = "#2e7d32";
-const BORDER = "#c8e6c9";
+const BLUE = "#0F9FEA";
+const BG = "#1A1A1A";
+const TEXT = "#F9F9F9";
 
 const styles = {
   header: {
-    display: "flex",
-    justifyContent: "space-between",
-    alignItems: "center",
-    padding: "0 40px",
-    height: "64px",
-    backgroundColor: "#fff",
-    borderBottom: `1px solid ${BORDER}`,
+    backgroundColor: BG,
+    borderBottom: "1px solid #3a3a3a",
     position: "sticky",
     top: 0,
     zIndex: 100,
-    boxShadow: "0 1px 4px rgba(0,0,0,0.06)",
+  },
+  headerContent: {
+    display: "flex",
+    justifyContent: "space-between",
+    alignItems: "center",
+    height: "64px",
+    maxWidth: "1500px",
+    margin: "0 auto",
+    padding: "0 40px",
   },
   logo: {
     fontSize: "1.2rem",
     fontWeight: "700",
-    color: GREEN,
+    color: TEXT,
     textDecoration: "none",
     letterSpacing: "-0.3px",
+    whiteSpace: "nowrap",
   },
-  nav: {
+  centerNav: {
+    display: "flex",
+    gap: "32px",
+    alignItems: "center",
+  },
+  navLink: {
+    color: TEXT,
+    textDecoration: "none",
+    fontSize: "0.95rem",
+    fontWeight: "500",
+    padding: "6px 14px",
+    borderRadius: "6px",
+    backgroundColor: "transparent",
+    transition: "background-color 0.2s",
+  },
+  rightNav: {
     display: "flex",
     gap: "12px",
     alignItems: "center",
@@ -95,9 +135,9 @@ const styles = {
   outline: {
     padding: "8px 20px",
     borderRadius: "6px",
-    border: `2px solid ${GREEN}`,
+    border: `2px solid ${BLUE}`,
     background: "transparent",
-    color: GREEN,
+    color: BLUE,
     fontWeight: "600",
     fontSize: "0.9rem",
     textDecoration: "none",
@@ -105,7 +145,7 @@ const styles = {
   filled: {
     padding: "8px 20px",
     borderRadius: "6px",
-    background: GREEN,
+    background: BLUE,
     color: "#fff",
     fontWeight: "600",
     fontSize: "0.9rem",
@@ -120,38 +160,61 @@ const styles = {
     gap: "8px",
     padding: "8px 16px",
     borderRadius: "6px",
-    border: `2px solid ${BORDER}`,
-    background: "#fff",
-    color: "#333",
+    border: "none",
+    background: "#333333",
+    color: TEXT,
     fontWeight: "600",
     fontSize: "0.9rem",
     cursor: "pointer",
+    whiteSpace: "nowrap",
   },
   caret: {
     fontSize: "0.6rem",
-    color: "#888",
+    color: "#aaa",
   },
   dropdown: {
     position: "absolute",
-    top: "calc(100% + 8px)",
+    top: "calc(100% + 4px)",
     right: 0,
-    backgroundColor: "#fff",
-    border: `1px solid ${BORDER}`,
-    borderRadius: "8px",
-    boxShadow: "0 4px 16px rgba(0,0,0,0.1)",
-    minWidth: "140px",
+    backgroundColor: "#333333",
+    border: "none",
+    borderRadius: "6px",
+    boxShadow: "0 4px 16px rgba(0,0,0,0.4)",
+    width: "100%",
+    minWidth: "unset",
     overflow: "hidden",
+    boxSizing: "border-box",
   },
   dropdownItem: {
     width: "100%",
-    padding: "12px 16px",
+    padding: "8px 16px",
     background: "none",
     border: "none",
-    textAlign: "left",
+    textAlign: "center",
     cursor: "pointer",
     fontSize: "0.9rem",
-    color: "#c62828",
+    color: TEXT,
     fontWeight: "600",
+    boxSizing: "border-box",
+    whiteSpace: "nowrap",
+  },
+  dropdownDivider: {
+    height: "1px",
+    backgroundColor: "#444",
+    margin: "0 8px",
+  },
+  dropdownItemRed: {
+    width: "100%",
+    padding: "8px 16px",
+    background: "none",
+    border: "none",
+    textAlign: "center",
+    cursor: "pointer",
+    fontSize: "0.9rem",
+    color: "#ff6b6b",
+    fontWeight: "600",
+    boxSizing: "border-box",
+    whiteSpace: "nowrap",
   },
 };
 

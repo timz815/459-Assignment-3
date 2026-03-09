@@ -1,10 +1,12 @@
-import { useEffect, useState } from "react";
+import { useContext, useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { AuthContext } from "../context/AuthContext";
 import Header from "../components/Header";
 
-function Home() {
+function Tournaments() {
   const [tournaments, setTournaments] = useState([]);
   const [searchTerm, setSearchTerm] = useState("");
+  const { token } = useContext(AuthContext);
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -22,11 +24,11 @@ function Home() {
 
   function getStatusStyle(status) {
     switch (status) {
-      case "open":     return { bg: "#0a3a4a", color: "#0F9FEA" };
-      case "active":   return { bg: "#0a3a1a", color: "#4caf50" };
-      case "closed":   return { bg: "#3a1a1a", color: "#ff6b6b" };
-      case "ended":    return { bg: "#2a2a2a", color: "#888" };
-      default:         return { bg: "#2a2a2a", color: "#888" };
+      case "open":   return { bg: "#0a3a4a", color: "#0F9FEA" };
+      case "active": return { bg: "#0a3a1a", color: "#4caf50" };
+      case "closed": return { bg: "#3a1a1a", color: "#ff6b6b" };
+      case "ended":  return { bg: "#2a2a2a", color: "#888" };
+      default:       return { bg: "#2a2a2a", color: "#888" };
     }
   }
 
@@ -34,34 +36,38 @@ function Home() {
     <div style={styles.page}>
       <Header />
 
-      {/* Hero */}
-      <section style={styles.hero}>
-        <div style={styles.heroInner}>
-          <h1 style={styles.heroTitle}>Think You Can Beat the Market?</h1>
-          <h1 style={styles.heroTitle}>Enter a Trading Tournament!</h1>
-
-          <div style={styles.searchWrapper}>
-            <input
-              type="text"
-              placeholder="Search tournaments…"
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              style={styles.searchInput}
-            />
-            <span style={styles.searchIcon}>
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#888" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                <circle cx="11" cy="11" r="8" />
-                <line x1="21" y1="21" x2="16.65" y2="16.65" />
-              </svg>
-            </span>
-          </div>
+      <div style={styles.content}>
+        {/* Title row */}
+        <div style={styles.titleRow}>
+          <h1 style={styles.pageTitle}>Tournaments</h1>
+          {token && (
+            <button
+              style={styles.createBtn}
+              onClick={() => navigate("/add-tournament")}
+            >
+              + Create Tournament
+            </button>
+          )}
         </div>
-      </section>
 
-      {/* Tournaments */}
-      <section style={styles.section}>
-        <h2 style={styles.sectionTitle}>Current Tournaments</h2>
+        {/* Search */}
+        <div style={styles.searchWrapper}>
+          <input
+            type="text"
+            placeholder="Search tournaments…"
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            style={styles.searchInput}
+          />
+          <span style={styles.searchIcon}>
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#888" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <circle cx="11" cy="11" r="8" />
+              <line x1="21" y1="21" x2="16.65" y2="16.65" />
+            </svg>
+          </span>
+        </div>
 
+        {/* List */}
         <div style={styles.list}>
           {filtered.length > 0 ? (
             filtered.map((t) => {
@@ -81,12 +87,17 @@ function Home() {
                     <span style={{ ...styles.badge, backgroundColor: bg, color }}>
                       {t.status}
                     </span>
-                    {(t.status === "open" || t.status === "active") && (
+                    {token && (t.status === "open" || t.status === "active") && (
+                      <button style={styles.joinBtn}>
+                        Join
+                      </button>
+                    )}
+                    {!token && (
                       <button
                         style={styles.joinBtn}
-                        onClick={() => navigate("/tournaments")}
+                        onClick={() => navigate("/login")}
                       >
-                        Join
+                        Login to Join
                       </button>
                     )}
                   </div>
@@ -95,11 +106,19 @@ function Home() {
             })
           ) : (
             <div style={styles.empty}>
-              <p>No tournaments found. Be the first to create one!</p>
+              <p>No tournaments found.</p>
+              {token && (
+                <button
+                  style={styles.createBtn}
+                  onClick={() => navigate("/add-tournament")}
+                >
+                  + Create the first one
+                </button>
+              )}
             </div>
           )}
         </div>
-      </section>
+      </div>
     </div>
   );
 }
@@ -115,27 +134,39 @@ const styles = {
     color: TEXT,
     fontFamily: "'Segoe UI', sans-serif",
   },
-  hero: {
-    backgroundColor: BG,
-    padding: "80px 20px",
-    borderBottom: "1px solid #3a3a3a",
-  },
-  heroInner: {
+  content: {
     maxWidth: "1250px",
     margin: "0 auto",
-    textAlign: "left",
+    padding: "50px 20px 80px",
   },
-  heroTitle: {
-    fontSize: "2.4rem",
-    fontWeight: "700",
+  titleRow: {
+    display: "flex",
+    justifyContent: "space-between",
+    alignItems: "center",
+    marginBottom: "28px",
+    paddingBottom: "20px",
+    borderBottom: "1px solid #3a3a3a",
+  },
+  pageTitle: {
+    margin: 0,
+    fontSize: "2rem",
     color: TEXT,
-    margin: "0 0 8px",
-    lineHeight: 1.2,
+    fontWeight: "700",
+  },
+  createBtn: {
+    padding: "10px 22px",
+    backgroundColor: BLUE,
+    color: "#fff",
+    border: "none",
+    borderRadius: "6px",
+    fontWeight: "600",
+    fontSize: "0.95rem",
+    cursor: "pointer",
   },
   searchWrapper: {
     position: "relative",
-    marginTop: "32px",
     maxWidth: "500px",
+    marginBottom: "28px",
   },
   searchInput: {
     width: "100%",
@@ -156,19 +187,6 @@ const styles = {
     display: "flex",
     alignItems: "center",
     pointerEvents: "none",
-  },
-  section: {
-    maxWidth: "1250px",
-    margin: "0 auto",
-    padding: "50px 20px 80px",
-  },
-  sectionTitle: {
-    fontSize: "1.2rem",
-    fontWeight: "600",
-    color: TEXT,
-    marginBottom: "20px",
-    paddingBottom: "12px",
-    borderBottom: "1px solid #3a3a3a",
   },
   list: {
     display: "flex",
@@ -241,7 +259,11 @@ const styles = {
     textAlign: "center",
     padding: "60px 40px",
     color: "#666",
+    display: "flex",
+    flexDirection: "column",
+    alignItems: "center",
+    gap: "20px",
   },
 };
 
-export default Home;
+export default Tournaments;

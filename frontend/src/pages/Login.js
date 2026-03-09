@@ -1,7 +1,7 @@
 import { useContext, useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { AuthContext } from "../context/AuthContext";
-import Navbar from "../components/Header";
+import Header from "../components/Header";
 
 function Login() {
   const [formData, setFormData] = useState({ username: "", password: "" });
@@ -40,11 +40,10 @@ function Login() {
 
   return (
     <div style={styles.page}>
-      <Navbar />
+      <Header />
       <div style={styles.container}>
         <div style={styles.card}>
-          <h2 style={styles.title}>Welcome Back</h2>
-          <p style={styles.subtitle}>Sign in to your garden</p>
+          <h2 style={styles.title}>Login</h2>
 
           {error && <div style={styles.errorBanner}>{error}</div>}
 
@@ -67,7 +66,7 @@ function Login() {
               required
               style={styles.input}
             />
-            <button type="submit" style={styles.submitBtn}>Sign In</button>
+            <button type="submit" style={styles.button}>Sign In</button>
           </form>
 
           <p style={styles.footerText}>
@@ -80,22 +79,85 @@ function Login() {
   );
 }
 
-const GREEN = "#2e7d32";
-const BORDER = "#c8e6c9";
+const BLUE = "#0F9FEA";
+const TEXT = "#F9F9F9";
 
 const styles = {
-  page: { minHeight: "100vh", backgroundColor: "#f4f7f4", fontFamily: "'Segoe UI', sans-serif" },
-  container: { display: "flex", justifyContent: "center", alignItems: "center", minHeight: "calc(100vh - 64px)" },
-  card: { width: "100%", maxWidth: "400px", backgroundColor: "#fff", borderRadius: "12px", padding: "40px", boxShadow: "0 4px 20px rgba(0,0,0,0.08)" },
-  title: { margin: "0 0 4px", color: GREEN, fontSize: "1.8rem", textAlign: "center" },
-  subtitle: { margin: "0 0 28px", color: "#888", fontSize: "0.9rem", textAlign: "center" },
-  errorBanner: { backgroundColor: "#ffebee", color: "#c62828", padding: "10px", borderRadius: "6px", marginBottom: "16px", fontSize: "0.9rem", textAlign: "center" },
-  form: { display: "flex", flexDirection: "column", gap: "6px" },
-  label: { fontSize: "0.8rem", fontWeight: "600", color: "#444", marginTop: "10px" },
-  input: { padding: "10px 14px", borderRadius: "6px", border: `1px solid ${BORDER}`, fontSize: "1rem", outline: "none" },
-  submitBtn: { marginTop: "18px", padding: "12px", backgroundColor: GREEN, color: "#fff", border: "none", borderRadius: "6px", fontSize: "1rem", fontWeight: "600", cursor: "pointer", width: "100%" },
-  footerText: { marginTop: "20px", textAlign: "center", fontSize: "0.88rem", color: "#666" },
-  link: { color: GREEN, fontWeight: "bold", textDecoration: "none" },
+  page: {
+    minHeight: "100vh",
+    backgroundColor: "#1A1A1A",
+  },
+  container: {
+    display: "flex",
+    justifyContent: "center",
+    alignItems: "center",
+    minHeight: "calc(100vh - 64px)",
+  },
+  card: {
+    width: "100%",
+    maxWidth: "400px",
+    padding: "2rem",
+    backgroundColor: "#333333",
+    borderRadius: "8px",
+    boxShadow: "0 4px 20px rgba(0,0,0,0.4)",
+  },
+  title: {
+    textAlign: "center",
+    color: TEXT,
+    marginBottom: "1.5rem",
+  },
+  errorBanner: {
+    backgroundColor: "#4a1a1a",
+    color: "#ff6b6b",
+    padding: "10px",
+    borderRadius: "6px",
+    marginBottom: "16px",
+    fontSize: "0.9rem",
+    textAlign: "center",
+  },
+  form: {
+    display: "flex",
+    flexDirection: "column",
+    gap: "6px",
+  },
+  label: {
+    fontSize: "0.8rem",
+    fontWeight: "600",
+    color: "#aaa",
+    marginTop: "10px",
+  },
+  input: {
+    padding: "10px 14px",
+    borderRadius: "6px",
+    border: "1px solid #444",
+    backgroundColor: "#2a2a2a",
+    color: TEXT,
+    fontSize: "1rem",
+    outline: "none",
+  },
+  button: {
+    marginTop: "1rem",
+    backgroundColor: BLUE,
+    color: "#fff",
+    border: "none",
+    padding: "10px",
+    borderRadius: "6px",
+    cursor: "pointer",
+    width: "100%",
+    fontWeight: "600",
+    fontSize: "1rem",
+  },
+  footerText: {
+    marginTop: "1.5rem",
+    textAlign: "center",
+    fontSize: "0.9rem",
+    color: "#888",
+  },
+  link: {
+    color: BLUE,
+    fontWeight: "bold",
+    textDecoration: "none",
+  },
 };
 
 export default Login;

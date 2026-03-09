@@ -4,8 +4,9 @@ import Home from "./pages/Home";
 import Login from "./pages/Login";
 import Register from "./pages/Register";
 import Dashboard from "./pages/Dashboard";
-import AddPlant from "./pages/AddPlant";
+import AddTournament from "./pages/AddTournament";
 import ProtectedRoute from "./routes/ProtectedRoute";
+import Tournaments from "./pages/Tournaments";
 
 function App() {
   return (
@@ -16,6 +17,8 @@ function App() {
           <Route path="/" element={<Home />} />
           <Route path="/login" element={<Login />} />
           <Route path="/register" element={<Register />} />
+          <Route path="/tournaments" element={<Tournaments />} />
+
 
           {/* protected routes - ProtectedRoute bounces unauthenticated users to /login */}
           <Route
@@ -27,10 +30,10 @@ function App() {
             }
           />
           <Route
-            path="/add-plant"
+            path="/add-tournament"
             element={
               <ProtectedRoute>
-                <AddPlant />
+                <AddTournament />
               </ProtectedRoute>
             }
           />
